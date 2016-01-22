@@ -1,5 +1,6 @@
 # h19term
-<preformat>
+
+```
   _   _  _   ___   _
  | | | |/ | / _ \ | |_  ___  _ __  _ __ ___
  | |_| || || (_) || __|/ _ \| '__|| '_ ` _ \
@@ -401,7 +402,7 @@
  If you just want to buy me a coffee or beer then I live on Vancouver Island,
  British Columbia, Canada and am always available:-)  Please come and visit.
  
-</preformat>
+```
  
  
  
