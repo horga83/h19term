@@ -1,0 +1,61 @@
+
+CP/M Quick Help
+===============================================================================
+
+Control key commands
+--------------------
+CTRL + C : 	Restarts CP/M by initiating a warm start
+CTRL + H : 	Moves the cursor one space to the left (Backspace).
+CTRL + I : 	Inputs a tab code (same as the TAB key)
+CTRL + P : 	Toggle printer echo function. (output assigned to LST:).
+CTRL + S : 	Momentarily stops processing, resumed by typing this command again.
+CTRL + X : 	Erases the current command.
+CTRL + Z : 	Terminates input from the keyboard. (used with certain commands).
+
+
+Built-in commands
+-----------------
+[items] are optional,  <items> are compulsary.
+
+DIR [d:][filematch]           Display list of files.  <letter>*.* works
+ERA [d:]<filematch>           Erase specified files.  *.* can be used.
+REN [d:]new.ext = old.ext     Change file name from old.ext to new.ext
+SAVE n [d:]filename.ext       Save the n number of pages of the TPA to disk.
+TYPE [d:]filename.ext         List contents of the ASCII file.
+USER n                        Switches to the specified user area.
+
+
+Using PIP
+---------
+PIP [d:][newfile.ext]=[d:][filespec][<t>
+
+Copy files between peripherals whilst performing optional conversion <t>.
+
+PIP H:=A:INFO.DAT              Copy file from drive to drive.
+PIP [A:]NEW.DAT=[A:]INFO.DAT   Copy file to new name.
+PIP LST:=[A:]LETTER.TXT        Copy file to printer.
+
+In addition, a range of parameters can be specified in square brackets [] 
+immediately after the command to perform various translations during the copy.
+
+[B]	  Block Mode Transfer - Copy data in blocks, used with paper tape readers.
+[E]	  Echo to screen - copy to screen as well as destination.
+[Pn]  Insert a form feed every n lines.
+[F]	  Supress form feeds
+[H]	  Hex format - only allow copying of intel HEX format files.
+[I]	  Ignore NULL records.
+[L]	  Lower case conversion - converts all upper case characters to lower case.
+[N]	  Number lines - Move text to start at column 9, and insert line numbers.
+[N2]  As [N] but zero pad the number to 6 digits.
+[O]	  Object file transfer - would otherwise break on non ascii/hex files.
+[R]	  Read System Files - read and copy system, sets [W]
+[Qstring^Z]	  Stop copying at specified string, ^Z refers to CTRL-Z
+[Sstring^Z]	  Start copying at specified string
+[Tn]  TAB setting - move tab settings of file to columns, n, 1n, 2n, 3n, etc.
+[Gn]  Transfer from user area n to current area
+[Dn]  Truncate file at column n
+[U]	  Uppercase conversion - the opposite of [L]
+[V]	  Verify the copy
+[W]	  Write to a readonly file
+[Z]	  Zero parity setting - Set highest (parity) bit of every byte to 0.
+
