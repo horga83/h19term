@@ -58,6 +58,8 @@
 # Feb 24, 2015   V1.8  Fix keyboard repeat code to not miss char typed
 #                      Add change baud rate functions - with Super-19 baud rates
 #                      19200 and 38400 added.
+# Jan 22, 2016   V1.9  Fix bug in heath_escape_seq  - thanks Jason Kersten
+
 
 import time, curses, string, ConfigParser
 import sys, os, datetime, re
@@ -111,8 +113,8 @@ DEFAULT_COLOUR = 0
 # ************  END OF USER MODIFIABLE SETTINGS *****************************
 
 
-VERSION = 'V1.8'
-VERSION_DATE = 'Feb 09,2015'
+VERSION = 'V1.9'
+VERSION_DATE = 'Jan 22,2016'
 
 CONFIG_FILE = os.path.join(os.environ['HOME'], '.h19termrc')
 
@@ -855,7 +857,7 @@ class H19Term(H19Keys, H19Screen):
         elif c == 'B':
             self.cursor_down()
         elif c == 'C':
-            self.cursor.forward()
+            self.cursor_forward()
         elif c == 'D':
             self.cursor_backward()
         elif c == 'E':
