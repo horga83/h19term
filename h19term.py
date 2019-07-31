@@ -75,7 +75,7 @@ code = locale.getpreferredencoding()
 # Do not modify these settings here any more, edit the .h19termrc file instead,
 # you will find it in your home directory.
 
-SERIAL_PORT = '/dev/ttyR3'
+SERIAL_PORT = '/dev/ttyUSB0'
 BAUD_RATE = 9600
 
 # This is the root directory for h19term except for .h19termrc which is in your
