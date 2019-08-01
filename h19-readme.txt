@@ -395,7 +395,7 @@
  OTHER INFO
  ------------------------------------------------------------------------------
  If you have questions, bug reports, patches or feature requests please email
- me at farrisga@gmail.com
+ me at farrisg@gmsys.com
  
  If you just want to buy me a coffee or beer then I live on Vancouver Island,
  British Columbia, Canada and am always available:-)  Please come and visit.
