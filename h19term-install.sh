@@ -90,7 +90,7 @@ if [ "${OS}" = "Debian" ] ; then
     echo "the latest versions of the software packages installed? This process will take"
     echo "some time, but is recommended."
     echo
-    echo -n "Press ENTER to continue, or type n to skip : " ; read CHOOSE
+    echo -n "Press ENTER to continue, or type \"n\" to skip : " ; read CHOOSE
 
     if [ "${CHOOSE}" = "n" ] || [ "${CHOOSE}" = "N" ] ; then
       echo "Skipping software update"
@@ -131,6 +131,24 @@ if [ "${OS}" = "Debian" ] ; then
         echo "Setting font to H19term16x32..."        
         echo "FONT=/usr/share/h19term/H19term16x32.psfu.gz" >>/etc/default/console-setup
 
+        echo
+        echo "Would you like to enable autologin of the \"pi\" user? "
+        echo "Press ENTER to enable autologin or \"n\" to skip :" ; read CHOOSE
+
+        if [ "${CHOOSE}" = "n" ] || [ "${CHOOSE}" = "N" ] ; then
+              echo "Skipping autologin setup"
+        else
+              echo -n "Enabling autologin... "
+        systemctl set-default multi-user.target
+        ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
+        cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << EOF
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --autologin $SUDO_USER --noclear %I \$TERM
+EOF
+              echo "[ DONE ]"
+        fi
+
         echo 
         echo "Setting auto run of h19term.py for user pi..."
         echo "./h19term.py" >> /home/pi/.profile
@@ -167,9 +185,12 @@ if [ "${OS}" = "Debian" ] ; then
     echo "You may now reboot your Raspberry Pi..."
 
     echo
-    echo "You can run \"sudo raspi-config\" and set the autologin service if you"
-    echo "would like the system to autologin straight to h19term."
-    echo "The auto login is in the \"Boot Options\" section."
+    echo "Upon first run h19term will ask which serial port to use and"
+    echo "setup some other configuration options which it writes into a "
+    echo "~/.h19termrc file."
+    echo
+    echo "It will only do this on first run."
+    echo "Type ./h19term.py from the command line or reboot to run."
     #sleep 5
     #reboot
 fi
