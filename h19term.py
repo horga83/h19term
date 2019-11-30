@@ -59,7 +59,7 @@
 #                      Add change baud rate functions - with Super-19 baud rates
 #                      19200 and 38400 added.
 # Jan 22, 2016   V1.9  Fix bug in heath_escape_seq  - thanks Jason Kersten
-
+# Nov 28, 2019   V1.10 Add ESC-Z function, identify as VT52
 
 import time, curses, string, ConfigParser
 import sys, os, datetime, re
@@ -417,8 +417,13 @@ class H19Screen:
             return
             
         self.screen.move(line, col)
-        
-	# Erasing and editing
+
+    def can_perform_as_vt52(self,sio):
+        sio.write(ESC)
+        sio.write('/')
+        sio.write('K')
+
+    # Erasing and editing
 
     def clear_display(self):
         self.screen.erase()
@@ -890,7 +895,7 @@ class H19Term(H19Keys, H19Screen):
             c = ''
             self.set_cursor_position(line,col)
         elif c == 'Z':
-            pass
+            self.can_perform_as_vt52(sio)
         elif c == 'b':
             self.erase_to_beginning_of_display()
         elif c == 'j':

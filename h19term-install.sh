@@ -35,8 +35,6 @@ if [ "${OS}" = "Debian" ] ; then
       DEBIAN_VERSION=10
     elif (grep -q "9." /etc/debian_version) ; then
       DEBIAN_VERSION=9
-    elif (grep -q "8." /etc/debian_version) ; then
-      DEBIAN_VERSION=8
     else
       DEBIAN_VERSION=UNSUPPORTED
     fi
@@ -65,7 +63,7 @@ if [ "${OS}" = "Debian" ] ; then
     echo -n "Press ENTER to continue, or CTRL-C to exit : " ; read ENTER
 
     if [ "${RPI}" = "YES" ] ; then
-      if [ ${DEBIAN_VERSION} -lt 8 ] ; then 
+      if [ ${DEBIAN_VERSION} -lt 9 ] ; then 
         echo
         echo "**** ERROR ****"
         echo "This script will only work on Debian 9 (Stretch) or newer Lite images at this"
@@ -107,7 +105,14 @@ if [ "${OS}" = "Debian" ] ; then
         wget http://www.cowlug.org/Downloads/h19term-master.zip
         cd /home/pi
         unzip h19term-master.zip
+
+        echo 
+        echo "Making directory /usr/share/H19term..."
         mkdir /usr/share/h19term
+        sleep 1
+        echo
+        echo "Copying H19 fonts to /usr/share/H19term..."
+        
         cp h19term-master/H19term* /usr/share/h19term
         mv h19term-master/* .
         chown -R pi /home/pi        
@@ -151,8 +156,15 @@ EOF
 
         echo 
         echo "Setting auto run of h19term.py for user pi..."
-        echo "./h19term.py" >> /home/pi/.profile
-
+        cat > /home/pi/.profile << EOF
+./h19term.py
+echo
+echo -n "Would you like to shutdown the system \"y\" or \"Y\" for yes or \"ENTER\" for no? "
+read CHOICE
+if [ "${CHOICE}" = "y" ] || [ "${CHOICE}" = "Y" ] ; then
+    sudo shutdown -h now
+fi
+EOF
     # Debian 9 - Several packages depreciated and no longer available
     elif [ "${DEBIAN_VERSION}" = "9" ] ; then 
         apt-get -y -qq install python-serial >/dev/null 2>&1
@@ -160,6 +172,24 @@ EOF
         echo "Setting font to H19term16x32..."        
         cp H19term* /usr/share/h19term
         echo "FONT=/usr/share/h19term/H19term16x32.psfu.gz" >>/etc/default/console-setup
+
+        echo
+        echo "Would you like to enable autologin of the \"pi\" user? "
+        echo "Press ENTER to enable autologin or \"n\" to skip :" ; read CHOOSE
+
+        if [ "${CHOOSE}" = "n" ] || [ "${CHOOSE}" = "N" ] ; then
+              echo "Skipping autologin setup"
+        else
+              echo -n "Enabling autologin... "
+        systemctl set-default multi-user.target
+        ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
+        cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << EOF
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --autologin $SUDO_USER --noclear %I \$TERM
+EOF
+              echo "[ DONE ]"
+        fi
 
         echo 
         echo "Setting auto run of h19term.py for user pi..."
@@ -175,7 +205,15 @@ EOF
 
         echo 
         echo "Setting auto run of h19term.py for user pi..."
-        echo "./h19term.py" >> /home/pi/.profile
+        cat > /home/pi/.profile << EOF
+./h19term.py
+echo
+echo -n "Would you like to shutdown the system \"y\" or \"Y\" for yes or \"ENTER\" for no? "
+read CHOICE
+if [ "${CHOICE}" = "y" ] || [ "${CHOICE}" = "Y" ] ; then
+    sudo shutdown -h now
+fi
+EOF
 
     fi
 
