@@ -113,8 +113,8 @@ DEFAULT_COLOUR = 0
 # ************  END OF USER MODIFIABLE SETTINGS *****************************
 
 
-VERSION = 'V1.9'
-VERSION_DATE = 'Jan 22,2016'
+VERSION = 'V1.10'
+VERSION_DATE = 'Nov 28,2019'
 
 CONFIG_FILE = os.path.join(os.environ['HOME'], '.h19termrc')
 
