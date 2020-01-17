@@ -60,6 +60,10 @@
 #                      19200 and 38400 added.
 # Jan 22, 2016   V1.9  Fix bug in heath_escape_seq  - thanks Jason Kersten
 # Nov 28, 2019   V1.10 Add ESC-Z function, identify as VT52
+# Jan 03, 2020   V1.11 Fix ANSI shifted keypad mode - fixes Sasix
+# Jan 16, 2020   V1.12 Fix backspace, it's a move not a delete
+#                      Also better format for serial port logging, each character
+#                      output is on a new line with < > around it.
 
 import time, curses, string, ConfigParser
 import sys, os, datetime, re
@@ -113,8 +117,8 @@ DEFAULT_COLOUR = 0
 # ************  END OF USER MODIFIABLE SETTINGS *****************************
 
 
-VERSION = 'V1.10'
-VERSION_DATE = 'Nov 28,2019'
+VERSION = 'V1.12'
+VERSION_DATE = 'Jan 16,2020'
 
 CONFIG_FILE = os.path.join(os.environ['HOME'], '.h19termrc')
 
@@ -134,6 +138,7 @@ NORM = 0    # Index for numkeys array
 H_ALT = 1
 A_ALT = 2
 SHIFT = 3
+ASHIFT = 4
 
 LF = '\x0a'
 CR = '\x0d'
@@ -177,22 +182,22 @@ class H19Keys:
     numkeys = {
         # Keypad group: Note F12 is the ENTER key because we can't distinguish
         # between the two ENTER keys, they both return ctrl-j
-        #            UNSHIFTED    HEATH     ANSI      SHIFTED
-        #                       UNSHIFTED UNSHIFTED
+        #            UNSHIFTED    HEATH     ANSI      SHIFTED     ANSI
+        #                       UNSHIFTED UNSHIFTED              SHIFTED
         #                       ALTERNATE ALTERNATE
-        #----------------------------------------------------
-        curses.KEY_IC:    ['0', '\x1b?p', '\x1bOp',   '0'],
-        curses.KEY_END:   ['1', '\x1b?q', '\x1bOq',   '\x1bL'],
-        curses.KEY_DOWN:  ['2', '\x1b?r', '\x1bOr',   '\x1bB'],
-        curses.KEY_NPAGE: ['3', '\x1b?s', '\x1bOs',   '\x1bM'],
-        curses.KEY_LEFT:  ['4', '\x1b?t', '\x1bOt',   '\x1bD'],
-        curses.KEY_B2:    ['5', '\x1b?u', '\x1bOu',   '\x1bH'],
-        curses.KEY_RIGHT: ['6', '\x1b?v', '\x1bOv',   '\x1bC'],
+        #----------------------------------------------------------------
+        curses.KEY_IC:    ['0', '\x1b?p', '\x1bOp',   '0',      '0'],
+        curses.KEY_END:   ['1', '\x1b?q', '\x1bOq',   '\x1bL',  '\x1b[L'],
+        curses.KEY_DOWN:  ['2', '\x1b?r', '\x1bOr',   '\x1bB',  '\x1b[B'],
+        curses.KEY_NPAGE: ['3', '\x1b?s', '\x1bOs',   '\x1bM',  '\x1b[M'],
+        curses.KEY_LEFT:  ['4', '\x1b?t', '\x1bOt',   '\x1bD',  '\x1b[D'],
+        curses.KEY_B2:    ['5', '\x1b?u', '\x1bOu',   '\x1bH',  '\x1b[H'],
+        curses.KEY_RIGHT: ['6', '\x1b?v', '\x1bOv',   '\x1bC',  '\x1b[C'],
         curses.KEY_HOME:  ['7', '\x1b?w', '\x1bOw',   '\x1bO'],
-        curses.KEY_UP:    ['8', '\x1b?x', '\x1bOx',   '\x1bA'],
-        curses.KEY_PPAGE: ['9', '\x1b?y', '\x1bOy',   '\x1bN'],
-        curses.KEY_DC:    ['1', '\x1b?n', '\x1bOn',   '.'],
-        curses.KEY_F10:    ['\x13', '\x1b?M', '\x1bOM',   '\x13'],
+        curses.KEY_UP:    ['8', '\x1b?x', '\x1bOx',   '\x1bA',  '\x1b[A'],
+        curses.KEY_PPAGE: ['9', '\x1b?y', '\x1bOy',   '\x1bN',  '\x1b[P'],
+        curses.KEY_DC:    ['.', '\x1b?n', '\x1bOn',   '.',      '.'],
+        curses.KEY_F10:   ['\x13', '\x1b?M', '\x1bOM', '\x13',  '\x13'],
     }
 
 
@@ -284,8 +289,8 @@ class H19Screen:
         else:
             if x == 0:
                 return('')
-            self.screen.delch(y, x-1)
-#            self.screen.refresh()
+            #self.screen.delch(y, x-1)
+            self.screen.move(y, x-1)
 
     def tab(self):  # so far don't need this
         pass
@@ -353,7 +358,7 @@ class H19Screen:
         if x == 0:
             return
         self.screen.move(y, x-n)
-        
+
     def cursor_down(self, n=1):
         y,x = self.screen.getyx()
         if n == 0:
@@ -558,6 +563,9 @@ class H19Term(H19Keys, H19Screen):
                     LC_RED = Config.get('Colours','Red')
                 else: updateFile = True
 
+                if Config.has_option('Date','AutoCpmDate'):
+                    AUTO_CPM_DATE = Config.getboolean('Date','AutoCpmDate')
+                else: updateFile = True
                 if Config.has_option('Date','CpmDate'):
                     CPM_DATE_FORMAT = Config.get('Date','CpmDate')
                 else: updateFile = True
@@ -653,10 +661,10 @@ class H19Term(H19Keys, H19Screen):
         Config.set('General','SoundFile', BEEP)
         Config.set('General','InstallPath', INSTALL_PATH)
         Config.set('General','# Use caution when increasing repeat rate to avoid overruns')
-        Config.set('General','KeyRepeatRate', KEY_REPEAT_RATE)
+        Config.set('General','KeyRepeatRate', str(KEY_REPEAT_RATE))
         Config.set('SerialComms','Port', SERIAL_PORT)
-        Config.set('SerialComms','BaudRate', BAUD_RATE)
-        Config.set('Fonts','Preload',PRELOAD_FONT)
+        Config.set('SerialComms','BaudRate', str(BAUD_RATE))
+        Config.set('Fonts','Preload',str(PRELOAD_FONT))
         Config.set('Fonts','Font',FONT)
         
         Config.set('Colours','# Custom colours used only for Linux console, see manual')
@@ -668,12 +676,12 @@ class H19Term(H19Keys, H19Screen):
         Config.set('Colours', 'Magenta', LC_MAGENTA)
         Config.set('Colours', 'Red', LC_RED)
         Config.set('Colours','# Default colour of H19term on console or Xterm, see manual')
-        Config.set('Colours','DefaultColour', DEFAULT_COLOUR)
+        Config.set('Colours','DefaultColour', str(DEFAULT_COLOUR))
         
-        Config.set('Date','AutoCpmDate',AUTO_CPM_DATE)
+        Config.set('Date','AutoCpmDate',str(AUTO_CPM_DATE))
         Config.set('Date','CpmDate',CPM_DATE_FORMAT)
         Config.set('Date','CpmTime',CPM_TIME_FORMAT)
-        Config.set('Date','AutoHdosDate',AUTO_HDOS_DATE)
+        Config.set('Date','AutoHdosDate',str(AUTO_HDOS_DATE))
         Config.set('Date','HdosDate',HDOS_DATE_FORMAT)
         Config.write(cfgfile)
         cfgfile.close()
@@ -813,9 +821,8 @@ class H19Term(H19Keys, H19Screen):
         if self.offline:
             return
         if self.logio:
-            self.log("<%s>" % c) 
+            self.log("\n<%s>" % c)
         sio.write(c)
-
 
     # Sometimes we need to wait for a character so we use this function
     def sio_read(self, sio, TIMEOUT=SIO_WAIT):
@@ -829,7 +836,7 @@ class H19Term(H19Keys, H19Screen):
                     
                 if c != '':
                     if self.logio:
-                        self.log("%s" % c) 
+                        self.log("%s" % c)
                     return(c)
                 else:
                     return('')
@@ -953,10 +960,10 @@ class H19Term(H19Keys, H19Screen):
             self.exit_hold_screen_mode()
 
     def ansi_escape_seq(self, sio):
-        ansiCmds = "ABCDHJKLMPfhlmnpqrsuz"
+        ansiCmds = "ABCDHJKLMNPfhlmnpqrsuz"
         illegalChars = "<@!$%^&*+-"
         seq = ""
-        
+
         while True:
             ch = self.sio_read(sio)
             if ch in illegalChars:
@@ -966,25 +973,29 @@ class H19Term(H19Keys, H19Screen):
                 break
 
         # now seq will hold a code such as 
+        # len(seq) = 2  ESC[C        keypad shifted 6
         # len(seq) = 3  ESC[6n       cursor position report
         # len(seq) = 6  ESC[0;11m    exit reverse video AND exit graphics mode
         # len(seq) = 8  ESC[>1;3;5l  rest - disable 25th line, exit hold screen,cursor on
         
         c = seq[len(seq) -1]    # get command (last char in seq)
-        
+        if len(seq) == 2:
+            seq += '1'
+
         if c == 'A':    # ESC [ Pn A
-            self.cursor_up(seq[1])
+            self.cursor_up(int(seq[2]))
         
         elif c == 'B':  # ESC [ Pn B
-            self.cursor_down(seq[1])
+            self.cursor_down(int(seq[2]))
         
         elif c == 'C':  # ESC [ Pn C
-            self.cursor.forward(seq[1])
-        
+            self.cursor_forward(int(seq[2]))
+
         elif c == 'D':  # ESC [ Pn D
-            self.cursor_backward(seq[1])
-        
-        elif c == 'H':  # ESC [ H or ESC [ Pn;Pn H 
+            self.cursor_backward(int(seq[2]))
+            return
+
+        elif c == 'H':  # ESC [ H or ESC [ Pn;Pn H
             #time.sleep(.5)
             if len(seq) == 2:
                 self.cursor_home()
@@ -1356,8 +1367,8 @@ class H19Term(H19Keys, H19Screen):
 
     def popup_error(self, text):
         try:
-            popup = curses.newwin(6, 40, 10, 20)
-            x = (40 - len(text)) / 2
+            popup = curses.newwin(6, 45, 10, 20)
+            x = (45 - len(text)) / 2
             popup.addstr(2, x, text)
             popup.addstr(3, 8, "Hit <ENTER> to return...")
             popup.border('|','|','-','-','+','+','+','+')
@@ -1577,7 +1588,7 @@ class H19Term(H19Keys, H19Screen):
         scn.addstr(2, 2, helptext)
         scn.addstr(12,27, VERSION)
         scn.addstr(13,27, VERSION_DATE)
-        scn.addstr(14,27,"By George Farris - farrisga@gmail.com")
+        scn.addstr(14,27,"By George Farris - farrisg@gmsys.com")
         scn.addstr(18,10, "A Heathkit H19 Terminal emulator for Linux...")
         scn.addstr(20,10, "Press CTRL-A Z for help on special keys...")
         scn.refresh()
@@ -1704,19 +1715,26 @@ class H19Term(H19Keys, H19Screen):
                 if self.ansiMode:
                     self.sio_write(sio, 'O')
                 self.sio_write(sio, self.fnkeys[c])
+            return
 
         elif self.numkeys.has_key(c):
             if self.keypadShiftedMode:
-                self.sio_write(sio, self.numkeys[c][SHIFT])
-            elif self.keypadAlternateMode:
+                if self.ansiMode:
+                    self.sio_write(sio, self.numkeys[c][ASHIFT])
+                else:
+                    self.sio_write(sio, self.numkeys[c][SHIFT])
+                return
+            elif self.keypadAlternateMode and not self.keypadShiftedMode:
                 if self.ansiMode:
                     self.sio_write(sio, self.numkeys[c][A_ALT])
                 else:
                     self.sio_write(sio, self.numkeys[c][H_ALT])
-            elif self.commandHistory:
-                self.check_command_history(c)
+                return
+
+            # elif self.commandHistory:
+            #     self.check_command_history(c)
             else:
-                self.sio_write(sio, term.numkeys[c][NORM])
+                self.sio_write(sio, self.numkeys[c][NORM])
 
         elif c == self.BACKSPACE:
             bsc = self.backspace(sio, KEY)  # PIE editor will send ESC
@@ -1731,9 +1749,11 @@ class H19Term(H19Keys, H19Screen):
             self.parse_ctrl_a(sio, scr, scn, st)
             
         else:
-            self.sio_write(sio, chr(c))
-
-
+            if c <= 255:
+                self.sio_write(sio, chr(c))
+            else:
+                self.bell()
+#                self.popup_error("For SHIFT ARROW keys, press F9, see help.")
 
     def main(self, scr, term, sio):
         scn, st = term.setup_screen()
@@ -1835,6 +1855,7 @@ class H19Term(H19Keys, H19Screen):
                     term.linefeed()
                 elif sc == ESC:
                     term.process_escape_seq(sio)
+                    sc=""
                 elif sc == BS:
                     term.backspace(sio, sc)
                 elif sc == NUL:
