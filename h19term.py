@@ -1137,11 +1137,12 @@ class H19Term(H19Keys, H19Screen):
             self.transmit_25th_line()
 
         elif c == 'r':
+            rate = 12   # default to 9600
             if len(seq) == 3:  #len(seq) = 3, ex: ESC[8r  2400 baud
                 rate = int(seq[1])
             elif len(seq) == 4: # ex: ESC[12r  9600 baud
                 rate = int(seq[1:3])
-            self.modify_baudrate(sio, self.baudrate[rate - 1]) 
+            self.modify_baudrate(sio, self.baudrate[rate - 1])
 
         elif c == 's':
             self.save_cursor_position()
@@ -1759,10 +1760,10 @@ class H19Term(H19Keys, H19Screen):
         scn, st = term.setup_screen()
         term.reset()
 
-        if curses.termname() == 'linux':
-            self.BACKSPACE = curses.KEY_BACKSPACE
-        else:
-            self.BACKSPACE = 127  # xterms do this
+        #if curses.termname() == 'linux':
+        self.BACKSPACE = curses.KEY_BACKSPACE
+        #else:
+        #    self.BACKSPACE = 127  # xterms do this
   
 
         dateString = ''
