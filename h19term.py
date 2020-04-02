@@ -518,73 +518,71 @@ class H19Term(H19Keys, H19Screen):
                 Config.read(CONFIG_FILE)
                 if Config.has_option('General', 'installpath'):
                     INSTALL_PATH = Config.get('General', 'installpath')
-                #else: updateFile = True
+                else: updateFile = True
                 if Config.has_option('General','KeyRepeatRate'):
                     KEY_REPEAT_RATE = Config.getfloat('General','KeyRepeatRate')
-                #else: updateFile = True
+                else: updateFile = True
                 if Config.has_option('General','SoundFile'):
                     BEEP = Config.get('General','SoundFile')
-                #else: updateFile = True
+                else: updateFile = True
 
                 if Config.has_option('SerialComms', 'port'):
                     SERIAL_PORT = Config.get('SerialComms', 'port')
-                #else: updateFile = True
+                else: updateFile = True
                 if Config.has_option('SerialComms', 'baudRate'):
                     BAUD_RATE = Config.getint('SerialComms', 'baudRate')
-                #else: updateFile = True
+                else: updateFile = True
 
                 if Config.has_option('Fonts','Preload'):
                     PRELOAD_FONT = Config.getboolean('Fonts','Preload')
-                #else: updateFile = True
+                else: updateFile = True
                 if Config.has_option('Fonts','Font'):
                     FONT = Config.get('Fonts','Font')
-                #else: updateFile = True
+                else: updateFile = True
 
                 if Config.has_option('Colours','DefaultColour'):
                     DEFAULT_COLOUR = Config.getint('Colours','DefaultColour')
-                #else: updateFile = True
+                else: updateFile = True
                 if Config.has_option('Colours','White'):
                     LC_WHITE = Config.get('Colours','White')
-                #else: updateFile = True
+                else: updateFile = True
                 if Config.has_option('Colours','Green'):
                     LC_GREEN = Config.get('Colours','Green')
-                #else: updateFile = True
+                else: updateFile = True
                 if Config.has_option('Colours','Yellow'):
                     LC_YELLOW = Config.get('Colours','Yellow')
-                #else: updateFile = True
+                else: updateFile = True
                 if Config.has_option('Colours','Blue'):
                     LC_BLUE = Config.get('Colours','Blue')
-                #else: updateFile = True
+                else: updateFile = True
                 if Config.has_option('Colours','Cyan'):
                     LC_CYAN = Config.get('Colours','Cyan')
-                #else: updateFile = True
+                else: updateFile = True
                 if Config.has_option('Colours','Magenta'):
                     LC_MAGENTA = Config.get('Colours','Magenta')
-                #else: updateFile = True
+                else: updateFile = True
                 if Config.has_option('Colours','Red'):
                     LC_RED = Config.get('Colours','Red')
-                #else: updateFile = True
+                else: updateFile = True
 
                 if Config.has_option('Date','AutoCpmDate'):
                     AUTO_CPM_DATE = Config.getboolean('Date','AutoCpmDate')
-                #else: updateFile = True
+                else: updateFile = True
                 if Config.has_option('Date','CpmDate'):
                     CPM_DATE_FORMAT = Config.get('Date','CpmDate')
-                #else: updateFile = True
+                else: updateFile = True
                 if Config.has_option('Date','CpmTime'):
                     CPM_TIME_FORMAT = Config.get('Date','CpmTime')
-                #else: updateFile = True
+                else: updateFile = True
                 if Config.has_option('Date','AutoHdosDate'):
                     AUTO_HDOS_DATE = Config.getboolean('Date','AutoHdosDate')
-                #else: updateFile = True
+                else: updateFile = True
                 if Config.has_option('Date','HdosDate'):
                     HDOS_DATE_FORMAT = Config.get('Date','HdosDate')
-                #else: updateFile = True
+                else: updateFile = True
 
             except:
                 print "Problem reading configuration file .h19termrc, skipping..."
-        print BAUD_RATE
-        print Config.getint('SerialComms', 'baudRate')
 
         if updateFile:
             print "\nConfiguration file ~/.h19termrc not found:"
