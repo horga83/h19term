@@ -64,6 +64,7 @@
 # Jan 16, 2020   V1.12 Fix backspace, it's a move not a delete
 #                      Also better format for serial port logging, each character
 #                      output is on a new line with < > around it.
+# Apr 02, 2020   V1.13 Add setting of baud rate.
 
 import time, curses, string, ConfigParser
 import sys, os, datetime, re
@@ -109,6 +110,8 @@ LC_CYAN = '00AAAA'
 LC_MAGENTA = 'AA00AA'
 LC_RED = 'AA0000'
 
+BAUD_RATES=[1200,2400,4800,9600,19200,38400,57600]
+
 # Set default colour
 # 0 - white, 1 - green, 2 - yellow, 3 - blue, 4 - cyan, 5 - magenta, 6 - red
 DEFAULT_COLOUR = 0
@@ -116,9 +119,8 @@ DEFAULT_COLOUR = 0
 
 # ************  END OF USER MODIFIABLE SETTINGS *****************************
 
-
-VERSION = 'V1.12'
-VERSION_DATE = 'Jan 16,2020'
+VERSION = 'V1.13'
+VERSION_DATE = 'Apr 02, 2020'
 
 CONFIG_FILE = os.path.join(os.environ['HOME'], '.h19termrc')
 
@@ -516,72 +518,74 @@ class H19Term(H19Keys, H19Screen):
                 Config.read(CONFIG_FILE)
                 if Config.has_option('General', 'installpath'):
                     INSTALL_PATH = Config.get('General', 'installpath')
-                else: updateFile = True
+                #else: updateFile = True
                 if Config.has_option('General','KeyRepeatRate'):
                     KEY_REPEAT_RATE = Config.getfloat('General','KeyRepeatRate')
-                else: updateFile = True
+                #else: updateFile = True
                 if Config.has_option('General','SoundFile'):
                     BEEP = Config.get('General','SoundFile')
-                else: updateFile = True
+                #else: updateFile = True
 
                 if Config.has_option('SerialComms', 'port'):
                     SERIAL_PORT = Config.get('SerialComms', 'port')
-                else: updateFile = True
+                #else: updateFile = True
                 if Config.has_option('SerialComms', 'baudRate'):
                     BAUD_RATE = Config.getint('SerialComms', 'baudRate')
-                else: updateFile = True
+                #else: updateFile = True
 
                 if Config.has_option('Fonts','Preload'):
                     PRELOAD_FONT = Config.getboolean('Fonts','Preload')
-                else: updateFile = True
+                #else: updateFile = True
                 if Config.has_option('Fonts','Font'):
                     FONT = Config.get('Fonts','Font')
-                else: updateFile = True
+                #else: updateFile = True
 
                 if Config.has_option('Colours','DefaultColour'):
                     DEFAULT_COLOUR = Config.getint('Colours','DefaultColour')
-                else: updateFile = True                    
+                #else: updateFile = True
                 if Config.has_option('Colours','White'):
                     LC_WHITE = Config.get('Colours','White')
-                else: updateFile = True
+                #else: updateFile = True
                 if Config.has_option('Colours','Green'):
                     LC_GREEN = Config.get('Colours','Green')
-                else: updateFile = True
+                #else: updateFile = True
                 if Config.has_option('Colours','Yellow'):
                     LC_YELLOW = Config.get('Colours','Yellow')
-                else: updateFile = True
+                #else: updateFile = True
                 if Config.has_option('Colours','Blue'):
                     LC_BLUE = Config.get('Colours','Blue')
-                else: updateFile = True
+                #else: updateFile = True
                 if Config.has_option('Colours','Cyan'):
                     LC_CYAN = Config.get('Colours','Cyan')
-                else: updateFile = True
+                #else: updateFile = True
                 if Config.has_option('Colours','Magenta'):
                     LC_MAGENTA = Config.get('Colours','Magenta')
-                else: updateFile = True
+                #else: updateFile = True
                 if Config.has_option('Colours','Red'):
                     LC_RED = Config.get('Colours','Red')
-                else: updateFile = True
+                #else: updateFile = True
 
                 if Config.has_option('Date','AutoCpmDate'):
                     AUTO_CPM_DATE = Config.getboolean('Date','AutoCpmDate')
-                else: updateFile = True
+                #else: updateFile = True
                 if Config.has_option('Date','CpmDate'):
                     CPM_DATE_FORMAT = Config.get('Date','CpmDate')
-                else: updateFile = True
+                #else: updateFile = True
                 if Config.has_option('Date','CpmTime'):
                     CPM_TIME_FORMAT = Config.get('Date','CpmTime')
-                else: updateFile = True
+                #else: updateFile = True
                 if Config.has_option('Date','AutoHdosDate'):
                     AUTO_HDOS_DATE = Config.getboolean('Date','AutoHdosDate')
-                else: updateFile = True
+                #else: updateFile = True
                 if Config.has_option('Date','HdosDate'):
                     HDOS_DATE_FORMAT = Config.get('Date','HdosDate')
-                else: updateFile = True
+                #else: updateFile = True
 
             except:
                 print "Problem reading configuration file .h19termrc, skipping..."
-                    
+        print BAUD_RATE
+        print Config.getint('SerialComms', 'baudRate')
+
         if updateFile:
             print "\nConfiguration file ~/.h19termrc not found:"
             print "    A new one will be created after serial port selection..."
@@ -643,9 +647,7 @@ class H19Term(H19Keys, H19Screen):
             
             self.write_h19config(True)  # True if it's a new file not a rewrite
             
-
     def write_h19config(self, new=False):
-        
         Config = ConfigParser.ConfigParser(allow_no_value = True)
         try:
             cfgfile = open(CONFIG_FILE, 'w')
@@ -833,8 +835,8 @@ class H19Term(H19Keys, H19Screen):
                     sio.timeout = TIMEOUT
                     c = sio.read(1)
                     sio.timeout = SIO_NO_WAIT
-                    
                 if c != '':
+                    c = chr(ord(c) & 0x7F)
                     if self.logio:
                         self.log("%s" % c)
                     return(c)
@@ -1402,6 +1404,7 @@ class H19Term(H19Keys, H19Screen):
     H19 DEL Key....................D  |  ERASE.....F11
     CP/M Quick Help................Q  |  OFFLINE...F12
     Set H19term colours............C  |
+    Set Baud Rate..................P  |
                                       
     Press command key or <Enter> to close help.
         """
@@ -1455,6 +1458,13 @@ class H19Term(H19Keys, H19Screen):
                 self.clear_display()
                 break
 
+            elif s == 'h' or s == 'H':  # Toggle HEATH/ANSI mode
+                if self.ansiMode:
+                    self.enter_heath_mode()
+                else:
+                    self.enter_ansi_mode()
+                break
+
             elif s == 'k' or s == 'K':  # Toggle Alternate Keypad mode
                 if self.keypadAlternateMode:
                     self.exit_alternate_keypad_mode()
@@ -1478,6 +1488,18 @@ class H19Term(H19Keys, H19Screen):
                 self.status.refresh()
                 break
 
+            elif s == 'm' or s == 'M':  # Show user manual
+                self.show_ascii_file('h19-readme.txt')
+                break
+
+            elif s == 'p' or s == 'P':  # Set baud rate
+                self.popup_baud_rate(sio)
+                break
+
+            elif s == 'q' or s == 'Q':  # Show CP/M quick help
+                self.show_ascii_file('cpm-help.txt')
+                break
+
             elif s == 'r' or s == 'R':  # Reset terminal
                 self.reset()
                 self.clear_display()
@@ -1490,26 +1512,72 @@ class H19Term(H19Keys, H19Screen):
                 self.firstChar = True
                 break
 
-            elif s == 'h' or s == 'H':  # Toggle HEATH/ANSI mode
-                if self.ansiMode:
-                    self.enter_heath_mode()
-                else:
-                    self.enter_ansi_mode()
-                break
-
-            elif s == 'm' or s == 'M':  # Show user manual
-                self.show_ascii_file('h19-readme.txt')
-                break
-
-            elif s == 'q' or s == 'Q':  # Show CP/M quick help
-                self.show_ascii_file('cpm-help.txt')
-                break
-
             elif s == 'z' or s == 'Z':
                 s = self.popup_help()
 
             else:
                 break  # get out on ^M or any non command key
+
+    def popup_baud_rate(self, sio):
+        global BAUD_RATE
+        TERM = curses.termname()
+        cl = []
+        cl.append('Select   1200')
+        cl.append('Select   2400')
+        cl.append('Select   4800')
+        cl.append('Select   9600')
+        cl.append('Select  19200')
+        cl.append('Select  38400')
+        cl.append('Select  57600')
+        try:
+            popup = curses.newwin(12, 32, 8, 20)
+            popup.attrset(curses.color_pair(0))
+            for i in range(len(cl)):
+                popup.addstr(i + 2, 9, cl[i], curses.color_pair(0))
+                popup.addstr(10, 2, "<Enter> to select, 'q' quits")
+            popup.border('|', '|', '-', '-', '+', '+', '+', '+')
+            popup.addstr(0, 5, '[Baud Rate Selection]')
+            popup.nodelay(0)
+            popup.keypad(1)
+            curses.curs_set(0)
+            popup.refresh()
+        except:
+            pass
+
+        idx = 0
+        popup.addstr(idx + 2, 9, cl[idx], curses.color_pair(idx + 0) | curses.A_REVERSE)
+
+        while True:
+            c = popup.getch()
+
+            if c == curses.KEY_DOWN:
+                if idx + 1 < len(cl):
+                    popup.addstr(idx + 2, 9, cl[idx], curses.color_pair(0) | curses.A_NORMAL)
+                    idx += 1
+                    popup.addstr(idx + 2, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
+                    popup.refresh()
+            elif c == curses.KEY_UP:
+                if idx - 1 >= 0:
+                    popup.addstr(idx + 2, 9, cl[idx], curses.color_pair(0) | curses.A_NORMAL)
+                    idx -= 1
+                    popup.addstr(idx + 2, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
+                    popup.refresh()
+
+            elif curses.keyname(c) == '^M':
+                BAUD_RATE = BAUD_RATES[idx]
+                sio.baudrate = BAUD_RATE
+                self.show_status_line(BAUD_RATE)
+                self.write_h19config()
+                self.screen.touchwin()
+                self.screen.refresh()
+                curses.curs_set(1)
+                return
+
+            elif chr(c) == 'q':
+                self.screen.touchwin()
+                self.screen.refresh()
+                curses.curs_set(1)
+                return
 
     def show_ascii_file(self, filename):
         curses.curs_set(CURSOR_INVISIBLE)
@@ -1604,7 +1672,7 @@ class H19Term(H19Keys, H19Screen):
         self.status.refresh()
         
         
-    def show_status_line(self):        
+    def show_status_line(self, baud=BAUD_RATE):
         y,x = self.screen.getyx()   # save cursor
         self.status.hline(0, 0, curses.ACS_HLINE, 80)
         self.status.move(1,0)
@@ -1616,7 +1684,7 @@ class H19Term(H19Keys, H19Screen):
             self.status.addstr(1, 6, SERIAL_PORT)
         self.status.addstr(1, 20, "|")
         self.status.addstr(" B", curses.A_BOLD)
-        self.status.addstr(1,23, str(BAUD_RATE))
+        self.status.addstr(1,23, str(baud))
         self.status.addstr(1, 29, "|")    
         self.status.addstr(" Keypad: [",curses.A_BOLD)
         self.status.addstr(1, 40, "    ")
