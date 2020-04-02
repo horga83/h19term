@@ -1566,7 +1566,7 @@ class H19Term(H19Keys, H19Screen):
             elif curses.keyname(c) == '^M':
                 BAUD_RATE = BAUD_RATES[idx]
                 sio.baudrate = BAUD_RATE
-                self.show_status_line(BAUD_RATE)
+                self.show_status_line()
                 self.write_h19config()
                 self.screen.touchwin()
                 self.screen.refresh()
@@ -1672,7 +1672,8 @@ class H19Term(H19Keys, H19Screen):
         self.status.refresh()
         
         
-    def show_status_line(self, baud=BAUD_RATE):
+    def show_status_line(self):
+        global BAUD_RATE
         y,x = self.screen.getyx()   # save cursor
         self.status.hline(0, 0, curses.ACS_HLINE, 80)
         self.status.move(1,0)
@@ -1684,7 +1685,7 @@ class H19Term(H19Keys, H19Screen):
             self.status.addstr(1, 6, SERIAL_PORT)
         self.status.addstr(1, 20, "|")
         self.status.addstr(" B", curses.A_BOLD)
-        self.status.addstr(1,23, str(baud))
+        self.status.addstr(1,23, str(BAUD_RATE))
         self.status.addstr(1, 29, "|")    
         self.status.addstr(" Keypad: [",curses.A_BOLD)
         self.status.addstr(1, 40, "    ")
