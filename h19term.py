@@ -64,7 +64,8 @@
 # Jan 16, 2020   V1.12 Fix backspace, it's a move not a delete
 #                      Also better format for serial port logging, each character
 #                      output is on a new line with < > around it.
-# Apr 02, 2020   V1.13 Add setting of baud rate.
+# Apr 02, 2020   V1.13 Add setting of baud rate
+#                      Add striping of high bit on incoming characters.
 # Apr 03, 2020   V1.14 Add changing the port on the fly.
 
 import time, curses, string, ConfigParser
