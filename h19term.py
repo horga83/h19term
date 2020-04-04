@@ -65,6 +65,7 @@
 #                      Also better format for serial port logging, each character
 #                      output is on a new line with < > around it.
 # Apr 02, 2020   V1.13 Add setting of baud rate.
+# Apr 03, 2020   V1.14 Add changing the port on the fly.
 
 import time, curses, string, ConfigParser
 import sys, os, datetime, re
@@ -119,8 +120,8 @@ DEFAULT_COLOUR = 0
 
 # ************  END OF USER MODIFIABLE SETTINGS *****************************
 
-VERSION = 'V1.13'
-VERSION_DATE = 'Apr 02, 2020'
+VERSION = 'V1.14'
+VERSION_DATE = 'Apr 03, 2020'
 
 CONFIG_FILE = os.path.join(os.environ['HOME'], '.h19termrc')
 
@@ -807,7 +808,6 @@ class H19Term(H19Keys, H19Screen):
     def open_port(self):
         try:
             sp = serial.Serial(SERIAL_PORT, BAUD_RATE, xonxoff=True, timeout=0)
-            #print "%s%s%s%s%s" % ("Serial port open [",SERIAL_PORT," ] [",BAUD_RATE,"]...")
             return sp
         except:
             print "\nATTENTION!! - Could not open serial port...\n\n"
@@ -853,7 +853,6 @@ class H19Term(H19Keys, H19Screen):
             
         log.write(s)
         log.close()
-
 
     def process_escape_seq(self, sio):
         if self.ansiMode:
@@ -1153,9 +1152,7 @@ class H19Term(H19Keys, H19Screen):
         elif c == 'z':
             self.reset_to_powerup_mode()
 
-
-	# Configuration
-	
+    # Configuration
     def reset_to_powerup_mode(self):
         self.reset()
 
@@ -1368,8 +1365,8 @@ class H19Term(H19Keys, H19Screen):
 
     def popup_error(self, text):
         try:
-            popup = curses.newwin(6, 45, 10, 20)
-            x = (45 - len(text)) / 2
+            popup = curses.newwin(6, 49, 10, 20)
+            x = (49 - len(text)) / 2
             popup.addstr(2, x, text)
             popup.addstr(3, 8, "Hit <ENTER> to return...")
             popup.border('|','|','-','-','+','+','+','+')
@@ -1517,8 +1514,7 @@ class H19Term(H19Keys, H19Screen):
                 break  # get out on ^M or any non command key
 
     def popup_baud_rate(self, sio):
-        global BAUD_RATE
-        TERM = curses.termname()
+        global BAUD_RATE, BAUD_RATES
         cl = []
         cl.append('Select   1200')
         cl.append('Select   2400')
@@ -1528,13 +1524,16 @@ class H19Term(H19Keys, H19Screen):
         cl.append('Select  38400')
         cl.append('Select  57600')
         try:
-            popup = curses.newwin(12, 32, 8, 20)
+            popup = curses.newwin(14, 36, 8, 20)
             popup.attrset(curses.color_pair(0))
+            popup.addstr(2,4, "Current port is: [ ")
+            popup.addstr(str(SERIAL_PORT)[5:],curses.A_BOLD)
+            popup.addstr(" ]")
             for i in range(len(cl)):
-                popup.addstr(i + 2, 9, cl[i], curses.color_pair(0))
-                popup.addstr(10, 2, "<Enter> to select, 'q' quits")
+                popup.addstr(i + 4, 9, cl[i], curses.color_pair(0))
+                popup.addstr(12, 2, "<Enter> to select, 'q' quits")
             popup.border('|', '|', '-', '-', '+', '+', '+', '+')
-            popup.addstr(0, 5, '[Baud Rate Selection]')
+            popup.addstr(0, 3, '[Baud Rate and Port Selection]')
             popup.nodelay(0)
             popup.keypad(1)
             curses.curs_set(0)
@@ -1542,28 +1541,95 @@ class H19Term(H19Keys, H19Screen):
         except:
             pass
 
-        idx = 0
-        popup.addstr(idx + 2, 9, cl[idx], curses.color_pair(idx + 0) | curses.A_REVERSE)
+        # get the index to place the cursor
+        idx = BAUD_RATES.index(BAUD_RATE)
+        popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
 
         while True:
             c = popup.getch()
-
             if c == curses.KEY_DOWN:
-                if idx + 1 < len(cl):
-                    popup.addstr(idx + 2, 9, cl[idx], curses.color_pair(0) | curses.A_NORMAL)
+                if idx == -1:
+                    popup.addstr(idx + 3, 23, str(SERIAL_PORT)[5:], curses.color_pair(0) | curses.A_NORMAL)
                     idx += 1
-                    popup.addstr(idx + 2, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
-                    popup.refresh()
+                    popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
+                elif idx + 1 < len(cl):
+                    popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_NORMAL)
+                    idx += 1
+                    popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
             elif c == curses.KEY_UP:
-                if idx - 1 >= 0:
-                    popup.addstr(idx + 2, 9, cl[idx], curses.color_pair(0) | curses.A_NORMAL)
+                if idx == 0:
+                    popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_NORMAL)
                     idx -= 1
-                    popup.addstr(idx + 2, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
-                    popup.refresh()
+                    popup.addstr(idx + 3, 23, str(SERIAL_PORT)[5:], curses.color_pair(0) | curses.A_REVERSE)
+                elif idx - 1 >= 0:
+                    popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_NORMAL)
+                    idx -= 1
+                    popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
+                popup.refresh()
 
             elif curses.keyname(c) == '^M':
-                BAUD_RATE = BAUD_RATES[idx]
-                sio.baudrate = BAUD_RATE
+                if idx == -1:
+                    self.popup_port_select(sio)
+                    #self.popup_error("Restart H19Term for new port to take affect.")
+                else:
+                    BAUD_RATE = BAUD_RATES[idx]
+                    sio.baudrate = BAUD_RATE
+                self.show_status_line()
+                self.write_h19config()
+                self.screen.touchwin()
+                self.screen.refresh()
+                curses.curs_set(1)
+                return
+
+            elif chr(c) == 'q':
+                self.screen.touchwin()
+                self.screen.refresh()
+                curses.curs_set(1)
+                return
+
+    def popup_port_select(self, sio):
+        global SERIAL_PORT
+        cl = []
+        try:
+            from serial.tools.list_ports import comports
+            for port, desc, hwid in sorted(comports()):
+                cl.append(port)
+        except:
+            pass
+
+        popup = curses.newwin(14, 36, 8, 20)
+        popup.attrset(curses.color_pair(0))
+        for i in range(len(cl)):
+            popup.addstr(i + 4, 9, cl[i], curses.color_pair(0))
+            popup.addstr(12, 2, "<Enter> to select, 'q' quits")
+        popup.border('|', '|', '-', '-', '+', '+', '+', '+')
+        popup.addstr(0, 9, '[Port Selection]')
+        popup.nodelay(0)
+        popup.keypad(1)
+        curses.curs_set(0)
+        popup.refresh()
+
+        # get the index to place the cursor
+        idx = cl.index(SERIAL_PORT)
+        popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
+
+        while True:
+            c = popup.getch()
+            if c == curses.KEY_DOWN:
+                if idx + 1 < len(cl):
+                    popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_NORMAL)
+                    idx += 1
+                    popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
+            elif c == curses.KEY_UP:
+                if idx - 1 >= 0:
+                    popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_NORMAL)
+                    idx -= 1
+                    popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
+                popup.refresh()
+
+            elif curses.keyname(c) == '^M':
+                SERIAL_PORT = cl[idx]
+                sio.port = SERIAL_PORT
                 self.show_status_line()
                 self.write_h19config()
                 self.screen.touchwin()
