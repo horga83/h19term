@@ -24,6 +24,13 @@ SAVE n [d:]filename.ext       Save the n number of pages of the TPA to disk.
 TYPE [d:]filename.ext         List contents of the ASCII file.
 USER n                        Switches to the specified user area.
 
+Using STAT
+----------
+STAT B:                     Get bytes remaing on B:
+STAT B:*.*                  Stat all files on B:
+STAT B:BIOS.SYS $R/W        Change BIOS.SYS on B: drive to read write
+STAT B:DSK:                 Get stat of disk records
+
 
 Using PIP
 ---------
@@ -58,4 +65,10 @@ immediately after the command to perform various translations during the copy.
 [V]	  Verify the copy
 [W]	  Write to a readonly file
 [Z]	  Zero parity setting - Set highest (parity) bit of every byte to 0.
+
+
+Using FORMAT
+------------
+FORMAT B:           Format B: drive
+FORMAT B:[DD,DS]    Format B: double density and double sided
 
