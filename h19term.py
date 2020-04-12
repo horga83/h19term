@@ -823,6 +823,7 @@ class H19Term(H19Keys, H19Screen):
             return
         if self.logio:
             self.log("\n<%s>" % c)
+            #pass
         sio.write(c)
 
     # Sometimes we need to wait for a character so we use this function
@@ -838,6 +839,7 @@ class H19Term(H19Keys, H19Screen):
                     c = chr(ord(c) & 0x7F)
                     if self.logio:
                         self.log("%s" % c)
+                        #self.log("%s\n" % c)
                     return(c)
                 else:
                     return('')
