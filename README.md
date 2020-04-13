@@ -16,6 +16,8 @@
  H19term aims to provide close to 100 percent software emulation of the
  Heathkit H19, also known as Zenith Z19, hardware video terminal. 
 
+ **Latest version V2.0**
+
  It currently has the following features:
  
    - Software bell - User configurable sound
