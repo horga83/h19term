@@ -13,7 +13,7 @@
  Copyright (c) 2014 George Farris - farrisga@gmail.com
  Licensed under version 3 of the GNU General Public License
  
- [Readme](https://github.com/horga83/h19term/edit/python3/Readme.md)
+ [Readme](https://github.com/horga83/h19term/edit/python3/README.md)
  [Installation](https://github.com/horga83/h19term/edit/python3/INSTALLATION.txt)
  
 
