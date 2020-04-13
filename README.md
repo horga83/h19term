@@ -40,3 +40,4 @@
  
  [Installation](https://github.com/horga83/h19term/edit/python3/INSTALLATION.txt)
  
+![h19term.png](https://github.com/horga83/h19term/edit/python3/h19term.png)
