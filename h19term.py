@@ -690,10 +690,10 @@ class H19Term(H19Keys, H19Screen):
             sys.exit()
 
     def setup_screen(self):
-        cur = curses.initscr()  # Initialize curses.
+        self.cur = curses.initscr()  # Initialize curses.
         curses.start_color()
-        cur.box()
-        cur.refresh()
+        self.cur.box()
+        self.cur.refresh()
 
         if curses.termname() == 'linux':
             if PRELOAD_FONT:
@@ -751,7 +751,7 @@ class H19Term(H19Keys, H19Screen):
         curses.init_pair(7, curses.COLOR_RED, curses.COLOR_BLACK)
 
 
-        y, x = cur.getmaxyx()
+        y, x = self.cur.getmaxyx()
         if y < 31 or x < 82:
             curses.endwin()
             print("\nYour screen is to small to run h19term...")
@@ -761,7 +761,7 @@ class H19Term(H19Keys, H19Screen):
         curses.raw()
         curses.noecho()
         curses.nonl()
-        cur.refresh()
+        self.cur.refresh()
         self.screen = curses.newwin(25,80,1,1)
         self.status = curses.newwin(4,80,26,1)
         self.screen.attrset(curses.color_pair(1))
@@ -1657,12 +1657,15 @@ class H19Term(H19Keys, H19Screen):
         data = fd.readlines()
         fd.close()
         self.show_help_status()
-        self.showdata(data)
+        self.show_data(data)
         self.show_status_line()
         curses.curs_set(CURSOR_NORMAL)
+        # self.cur.box()
+        # self.cur.refresh()
+        # self.screen.refresh()
+        # self.status.refresh()
 
-
-    def showdata(self,data):
+    def show_data(self,data):
         wy,wx=self.screen.getmaxyx()
 
         if type(data) == str:
@@ -1685,7 +1688,7 @@ class H19Term(H19Keys, H19Screen):
         inkey=0
         self.screen.nodelay(0)
         while inkey != 'q':
-            pad.refresh(y,x,0,0,wy-1,wx)
+            pad.refresh(y,x,1,1,wy-1,wx)
             inkey = self.screen.getkey()
 
             if inkey=='KEY_UP':y=max(y-1,0)
