@@ -18,19 +18,19 @@
 
  It currently has the following features:
  
- Software bell - User configurable sound
- Heath mode
- Ansi mode
- Supports 25th line.
- Support all graphics characters.
- Custom font files for the Linux console, includes Raspberry Pi
- Serial Port logging.
-  Easily configurable in .h19termrc file
- Colour changing mode for Amber and Green or other colours.
- Help files directly inside h19term.
-   Ascii table
-   User Manual
-   CP/M quick help.
+   - Software bell - User configurable sound
+   - Heath mode
+   - Ansi mode
+   - Supports 25th line.
+   - Support all graphics characters.
+   - Custom font files for the Linux console, includes Raspberry Pi
+   - Serial Port logging.
+   - Easily configurable in .h19termrc file
+   - Colour changing mode for Amber and Green or other colours.
+   - Help files directly inside h19term.
+     - Ascii table
+     - User Manual
+     - CP/M quick help.
    
  Runs on the Linux console or in most X11 terminal emulators such as
  gnome-terminal and xterm.  I have found that the terminal in XFCE does
