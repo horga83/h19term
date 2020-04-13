@@ -40,7 +40,7 @@ if [ "${OS}" = "Debian" ] ; then
     fi
 
     if [ "${DEBIAN_VERSION}" = "UNSUPPORTED" ] ; then
-      echo "This script will only work on Debian 8 (Jessie) or newer installs at this"
+      echo "This script will only work on Debian 9 (Stretch) or newer installs at this"
       echo "time."
       exit 1
     fi
@@ -102,9 +102,9 @@ if [ "${OS}" = "Debian" ] ; then
     # Installs required packages:
     echo -n "Installing packages needed for H19term... "
 
-        wget http://www.cowlug.org/Downloads/h19term-master.zip
+        wget http://www.cowlug.org/Downloads/h19term.zip
         cd /home/pi
-        unzip h19term-master.zip
+        unzip h19term.zip
 
         echo 
         echo "Making directory /usr/share/H19term..."
@@ -167,7 +167,7 @@ fi
 EOF
     # Debian 9 - Several packages depreciated and no longer available
     elif [ "${DEBIAN_VERSION}" = "9" ] ; then 
-        apt-get -y -qq install python-serial >/dev/null 2>&1
+        apt-get -y -qq install python3-serial >/dev/null 2>&1
         echo
         echo "Setting font to H19term16x32..."        
         cp H19term* /usr/share/h19term
@@ -197,7 +197,7 @@ EOF
         echo "./h19term.py" >> /home/pi/.profile
 
     else
-        apt-get -y -qq install python-serial >/dev/null 2>&1
+        apt-get -y -qq install python3-serial >/dev/null 2>&1
         echo
         echo "Setting font to H19term16x32..."        
         cp H19term* /usr/share/h19term

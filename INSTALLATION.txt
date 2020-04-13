@@ -1,0 +1,62 @@
+ INSTALLATION
+ ------------------------------------------------------------------------------
+ H19term is written in Python and currently uses version 3.6 or greater.  
+ I have found  this to be installed on all Linux distributions to date so you 
+ shouldn't have to install it. 
+ 
+ I have tried to keep the requirements to a minimum so the only other package
+ you should require is the PySerial module. Please note that as of the release 
+ of Python 3.x there are now packages specific to the Python version, make 
+ sure you install the correct one.
+ 
+ 
+ Raspberry Pi Installs:
+ ----------------------
+ If you are running on a RASPBERRY PI you can run the 
+ h19term-raspi-install.sh script.  This script assumes you are running
+ RASPBIAN on your Pi.
+
+  
+ Non Raspberry Pi Installs:
+ --------------------------
+ 
+ Install PySerial
+ ----------------
+ Raspbian, Debian, Ubuntu and Mint users can easily install this with the 
+ following command:
+   sudo apt-get install python3-serial
+
+ Arch and Manjaro users install with:
+   sudo pacman -S python-pyserial
+ 
+ Fedora and other RPM distros seach for pyserial.
+ 
+ Untar H19term
+ --------------
+ Next unzip the h19term.zip to either your home directory or alternatively 
+ any directory you like. If you want to install it somewhere other than 
+ your $HOME, you will need to adjust the "installpath" setting in your 
+ .h19termrc file.  
+ 
+ NOTE: You MUST run H19term at least once to create an initial .h19termrc file.
+ 
+ You should end up with the following files from the tar ball:
+   h19-readme.txt
+   h19-keys.odt
+   ascii.txt
+   beep1.wav
+   h19term.py
+   cpm-help.txt
+   H19term16x32.psfu.gz
+   H19term14x28.psfu.gz
+   H19term12x24.psfu.gz
+   H19term10x20.psfu.gz
+ 
+ Make it executable
+ ------------------    
+ Make the h19term.py file executable with the "chmod" command:
+   chmod +x h19term.py
+ 
+ Run the program from a terminal or Linux console by typing:
+ 
+ $ ./h19term.py<enter>
