@@ -1,0 +1,19 @@
+# IntelliJ IDEA
+.idea
+*.iml
+
+# pytest
+.pytest_cache
+.cache
+
+# test
+testgf.py
+H19.BAS
+A19.BAS
+DD.C
+H19.C
+h19.jpg
+h19term.png
+h19term-distribution.tar.gz
+h19term-install.tar.gz
+

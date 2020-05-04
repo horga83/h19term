@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+# coding=utf-8
 #
 #-------------------------------------------------------------------------------
 #  H19term - Heathkit H19 Terminal emulator
@@ -68,10 +69,20 @@
 #                      Add striping of high bit on incoming characters.
 # Apr 03, 2020   V1.14 Add changing the port on the fly.
 # Apr 11, 2020   V2.0  Python 3 version
+# May 02, 2020   V2.1  Added Heathkit-H19-bitmap font for desktop use.
+#                      Many fixes.
 
-import time, curses, string, configparser
-import sys, os, datetime, re
-import locale, serial
+import os
+import re
+import sys
+import time
+import curses
+import locale
+import serial
+import string
+import datetime
+import configparser
+from pysinewave import SineWave
 
 # This must be set to output unicode characters
 locale.setlocale(locale.LC_ALL, '')
@@ -86,9 +97,8 @@ SERIAL_PORT = '/dev/ttyUSB0'
 BAUD_RATE = 9600
 
 # This is the root directory for h19term except for .h19termrc which is in your
-# home directory.
-# Example of running h19term from $HOME/h19 instead of $HOME
-INSTALL_PATH = os.environ['HOME']
+# home directory.  All the help files etc live here.
+INSTALL_PATH = '/usr/local/share/h19term/'
 
 PRELOAD_FONT = False
 FONT = 'H19term16x32.psfu.gz'  # This font works on Raspberry Pi
@@ -120,10 +130,11 @@ DEFAULT_COLOUR = 0
 
 # ************  END OF USER MODIFIABLE SETTINGS *****************************
 
-VERSION = 'V2.0 - Python 3'
-VERSION_DATE = 'Apr 11, 2020'
+VERSION = 'V2.1 - Python 3'
+VERSION_DATE = 'May 02, 2020'
 
 CONFIG_FILE = os.path.join(os.environ['HOME'], '.h19termrc')
+LOG_FILE = os.path.join(os.environ['HOME'], 'h19term.log')
 
 SIO_WAIT = None
 SIO_NO_WAIT = 0
@@ -160,7 +171,6 @@ CURSOR = [0,0]
 SAVED_CURSOR = [0,0]
 
 KEY_REPEAT_RATE = 0.09  #10ish CPS, more than this and PIE editor has char overflows
-
 
 class H19Keys:
 
@@ -207,47 +217,46 @@ class H19Keys:
 
 class H19Screen:
 
-    def __init__(self):
-       pass
+    def __init__(self, scn, stat):
+        self.screen = scn
+        self.status = stat
 
-    h19_graphics = {
-        ## NOTE: When $TERM is set to "Linux" these end up getting used by things
-        ##       like ncurses-based apps.  In other words, it makes a whole lot
-        ##       of ugly look pretty again.
-        94: '⚫', # (26AB) BLACK CIRCLE
-        95: '◥', # (25E5) UPPER RIGHT TRIANGLE
-        96: '│', # (2502) LIGHT VERTICLE LINE
-        97: '─', # (2500) LIGHT HORIZONTAL LINE
-        98: '┼', # (253C) LIGHT PLUS
-        99: '┐', # (2510) LIGHT UPPER RIGHT CORNER
-        100: '┘', # (2518) LIGHT LOWER RIGHT CORNER
-        101: '└', # (2514) LIGHT LOWER LEFT CORNER
-        102: '┌', # (250C) LIGHT UPPER LEFT CORNER
-        103: '±', # (00B0) LIGHT PLUS MINUS
-        104: '→', # (2192) RIGHT ARROW
-        105: '▒', # (2592) MEDIUM SHADE
-        106: '▚', # (259A) QUADRANT UPPER LEFT LOWER RIGHT
-        107: '↓', # (2193) DOWN ARROW
-        108: '▗', # (2597) QUADRANT LOWER RIGHT
-        109: '▖', # (2596) QUADRANT LOWER LEFT
-        110: '▘', # (2598) QUADRANT UPPER LEFT
-        111: '▝', # (259D) QUADRANT UPPER RIGHT
-        112: '▀', # (2580) UPPER HALF BLOCK
-        113: '▐', # (2590) RIGHT HALF BLOCK
-        114: '◤', # (25E4) UPPER LEFT TRIANGLE
-        115: '┬', # (252C) LIGHT DOWN HORIZONTAL
-        116: '┤', # (2524) LIGHT VERTICAL LEFT
-        117: '┴', # (2534) LIGHT UP HORIZONTAL
-        118: '├', # (251C) LIGHT VERTICAL RIGHT
-        119: '╳', # (2573) LIGHT CROSS
-        120: '╱', # (2571) LIGHT RIGHT
-        121: '╲', # (2572) LIGHT LEFT
-        122: '▔', # (2594) UPPER HORIZONTAL LINE
-        123: '▁', # (2581) LOWER HORIZONTAL LINE
-        124: '▏', # (258F) LEFT VERTICAL LINE
-        125: '▕', # (2595) RIGHT VERTICAL LINE
-        126: '¶', # (00B6) PILCROW SIGN
-    }
+
+    h19_graphics = [
+        '\u25CF',  # ^ '⚫' BLACK CIRCLE
+        '\u25E5',  # - '◥' UPPER RIGHT TRIANGLE
+        '\u2503',  # ` '│' LIGHT VERTICLE LINE
+        '\u2501',  # a '─' LIGHT HORIZONTAL LINE
+        '\u254B',  # b '┼' LIGHT PLUS
+        '\u2513',  # c '┐' LIGHT UPPER RIGHT CORNER
+        '\u251B',  # d '┘' LIGHT LOWER RIGHT CORNER
+        '\u2517',  # e '└' LIGHT LOWER LEFT CORNER
+        '\u250F',  # f '┌' LIGHT UPPER LEFT CORNER
+        '\u00B1',  # g '±' LIGHT PLUS MINUS
+        '\u279C',  # h '→' RIGHT ARROW
+        '\u2591',  # i '▒' MEDIUM SHADE
+        '\u259A',  # j '▚' QUADRANT UPPER LEFT LOWER R
+        '\u2B07',  # k '↓' DOWN ARROW
+        '\u2597',  # l '▗' QUADRANT LOWER RIGHT
+        '\u2596',  # m '▖' QUADRANT LOWER LEFT
+        '\u2598',  # n '▘' QUADRANT UPPER LEFT
+        '\u259D',  # o '▝' QUADRANT UPPER RIGHT
+        '\u2580',  # p '▀' UPPER HALF BLOCK
+        '\u2590',  # q '▐' RIGHT HALF BLOCK
+        '\u25E4',  # r '◤' UPPER LEFT TRIANGLE
+        '\u2533',  # s '┬' LIGHT DOWN HORIZONTAL
+        '\u252B',  # t '┤' LIGHT VERTICAL LEFT
+        '\u253B',  # u '┴' LIGHT UP HORIZONTAL
+        '\u2523',  # v '├' LIGHT VERTICAL RIGHT
+        '\u2573',  # w '╳' LIGHT CROSS
+        '\u2571',  # x '╱' LIGHT RIGHT
+        '\u2572',  # y '╲' LIGHT LEFT
+        '\u2594',  # z '▔' UPPER HORIZONTAL LINE
+        '\u2581',  # { '▁' LOWER HORIZONTAL LINE
+        '\u258F',  # | '▏' LEFT VERTICAL LINE
+        '\u2595',  # } '▕' RIGHT VERTICAL LINE
+        '\u00B6',  # ~ '¶' PILCROW SIGN
+    ]
 
     def update_cursor(self):
         y,x = self.screen.getyx()
@@ -258,20 +267,12 @@ class H19Screen:
 
     #
     def bell(self):
-        os.system('aplay %s > /dev/null 2>&1 &' % os.path.join(INSTALL_PATH, BEEP))
-        y,x = self.screen.getyx()
-        self.status.addstr(1, 75, "BEEP", curses.A_REVERSE)
-        self.status.refresh()
-        time.sleep(0.05)
-        self.status.addstr(1, 75, "BEEP",  curses.A_NORMAL)
-        self.status.refresh()
-        time.sleep(0.05)
-        if self.logio:
-            log = " On "
-        else: log = " Off"
-        self.status.addstr(1, 75, log)
-        self.status.refresh()
-        self.screen.move(y,x)
+        if time.time() - self.bell_start_time > 1.0 or self.bell_start_time == 0.0:
+            self.sinewave.play()
+            self.bell_start_time = time.time()
+            time.sleep(0.16)
+            self.sinewave.stop()
+
 
     def backspace(self, sio, ch): # H8 will return ^H <SPACE> ^H when we
         y,x = self.screen.getyx()   # send it a ^H key
@@ -340,11 +341,13 @@ class H19Screen:
     def break_key(self, sio):
         sio.sendBreak()
 
-
-	# Cursor functions
-
+    # Cursor functions
     def cursor_home(self):
-        self.screen.move(0,0)
+        y, x = self.screen.getyx()
+        if x == 24:
+            self.screen.move(0,x)
+        else:
+            self.screen.move(0,0)
 
     def cursor_forward(self, n=1):
         y,x = self.screen.getyx()
@@ -433,8 +436,22 @@ class H19Screen:
 
     # Erasing and editing
 
-    def clear_display(self):
-        self.screen.erase()
+    def clear_display(self, reset=False):
+        if reset:   # reset clears both 24x80 and 25th line
+            self.screen.erase()
+#        if self.ansiMode and self.enable25thLine:
+#            self.screen.erase()
+        y, x = self.screen.getyx()
+        if y < 24:
+            for i in range(24):
+                self.screen.move(i, 0)
+                self.screen.clrtoeol()
+            self.screen.move(0, 0)
+        if y == 24:
+            self.screen.move(24, 0)
+            self.screen.clrtoeol()
+            #self.screen.move(24, 0) not sure we need this
+            self.screen.refresh()
 
     def erase_to_beginning_of_display(self):
         y,x = self.screen.getyx()
@@ -448,8 +465,7 @@ class H19Screen:
             for i in range(lines):
                 self.screen.move(i,0)
                 self.screen.clrtoeol()
-        self.screen.move(0,0)   # set cursor at bebinning of display or maybe
-                                # it should be x + 1, will have to test
+        self.screen.move(0,0)   # set cursor at beginning of display or maybe
 
     def erase_to_end_of_page(self):
         y,x = self.screen.getyx()
@@ -497,9 +513,12 @@ class H19Term(H19Keys, H19Screen):
     """
 
     def __init__(self):
-        H19Screen.__init__(self)
+        self.screen = None
+        self.status = None
         self.logio = False
-        self.baudrate = [110,150,300,600,1200,1800,2000,2400,3600,4800,7200,9600,19200,38400]
+        self.baudrate = [110, 150, 300, 600, 1200, 1800, 2000, 2400, 3600, 4800, 7200, 9600, 19200, 38400]
+
+        H19Screen.__init__(self, self.screen, self.status)
 
     def get_h19config(self):
         global SERIAL_PORT, BAUD_RATE, PRELOAD_FONT, FONT, BEEP
@@ -647,6 +666,7 @@ class H19Term(H19Keys, H19Screen):
             self.write_h19config(True)  # True if it's a new file not a rewrite
 
     def write_h19config(self, new=False):
+        cfgfile = ''
         Config = configparser.ConfigParser(allow_no_value = True)
         try:
             cfgfile = open(CONFIG_FILE, 'w')
@@ -692,10 +712,8 @@ class H19Term(H19Keys, H19Screen):
     def setup_screen(self):
         self.cur = curses.initscr()  # Initialize curses.
         curses.start_color()
-        self.cur.box()
-        self.cur.refresh()
 
-        if curses.termname() == 'linux':
+        if curses.termname() == b'linux':
             if PRELOAD_FONT:
                 os.system("setfont %s" % os.path.join(INSTALL_PATH, FONT))
 
@@ -741,6 +759,9 @@ class H19Term(H19Keys, H19Screen):
             g = int(int(LC_RED[2:4],16) * 3.92)
             b = int(int(LC_RED[4:6],16) * 3.92)
             curses.init_color(curses.COLOR_RED,r,g,b)
+        else:
+            self.cur.box()
+            self.cur.refresh()
 
         curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
@@ -754,9 +775,12 @@ class H19Term(H19Keys, H19Screen):
         y, x = self.cur.getmaxyx()
         if y < 31 or x < 82:
             curses.endwin()
-            print("\nYour screen is to small to run h19term...")
-            print("It must be at least 31 lines by 82 columns...\n")
+            print("\nYour screen is to small to run h19term, it must be")
+            print("at least 31 lines by 82 columns...\n")
+            print("Consider changing your terminal profile so you do not have")
+            print("to change this all the time...\n")
             sys.exit(1)
+        #curses.resize_term(31,82)
         curses.cbreak()
         curses.raw()
         curses.noecho()
@@ -799,7 +823,7 @@ class H19Term(H19Keys, H19Screen):
         self.keyboardDisabled = False
         self.wrapAtEndOfLine = False
         self.linesSinceBoot = 0 # used to auto set date
-        self.clear_display()
+        self.clear_display(True)
         self.cursor_home()
         curses.curs_set(CURSOR_NORMAL)
 
@@ -823,8 +847,10 @@ class H19Term(H19Keys, H19Screen):
         if self.offline:
             return
         if self.logio:
-            self.log("\n<%s>" % c)
+            self.log("\n{{%s}}" % c)
             #pass
+        while sio.out_waiting > 0:
+            pass
         sio.write(str.encode(c))
         #sio.write(c)
 
@@ -841,7 +867,6 @@ class H19Term(H19Keys, H19Screen):
                 c = chr(ord(c) & 0x7F)
                 if self.logio:
                     self.log("%s" % c)
-                    #self.log("%s\n" % c)
                 return(c)
             else:
                 return('')
@@ -850,10 +875,10 @@ class H19Term(H19Keys, H19Screen):
 
     def log(self, s):
         try:
-            log = open(os.path.join(INSTALL_PATH,'h19term.log'), 'a')
+            log = open(LOG_FILE, 'a')
         except:
             self.bell()
-            self.popup_error("Can't open %s/h19term.log for writing" % INSTALL_PATH)
+            self.popup_error("Can't open %s for writing" % LOG_FILE)
             return
 
         log.write(s)
@@ -962,18 +987,19 @@ class H19Term(H19Keys, H19Screen):
             self.exit_alternate_keypad_mode()
         elif c == '\\':
             self.exit_hold_screen_mode()
+        self.screen.refresh()
 
     def ansi_escape_seq(self, sio):
-        ansiCmds = "ABCDHJKLMNPfhlmnpqrsuz"
-        illegalChars = "<@!$%^&*+-"
+        ansi_cmds = "ABCDHJKLMNPfhlmnpqrsuz"
+        illegal_chars = "<@!$%^&*+-"
         seq = ""
 
         while True:
             ch = self.sio_read(sio)
-            if ch in illegalChars:
+            if ch in illegal_chars:
                 return
             seq += ch
-            if ch in ansiCmds:  # we're out if it's an ansi code
+            if ch in ansi_cmds:  # we're out if it's an ansi code
                 break
 
         # now seq will hold a code such as
@@ -1023,7 +1049,6 @@ class H19Term(H19Keys, H19Screen):
                     self.erase_to_beginning_of_display()
                 elif seq[1] == '2':
                     self.clear_display()
-                    self.cursor_home()
 
         elif c == 'K':
             if len(seq) == 3:   #valid
@@ -1163,44 +1188,53 @@ class H19Term(H19Keys, H19Screen):
 
     def set_mode(self, modeType, mode):
         if modeType == 'set':
-            setMode = True
+            set_mode = True
         else:
-            setMode = False
+            set_mode = False
 
+        # disabling the 25th line also clears it.
         if mode == '1':
-            self.enable25thLine = setMode
+            if set_mode:
+                self.enable25thLine = True
+            else:
+                self.enable25thLine = False
+                self.save_cursor_position()
+                self.set_cursor_position(24,0)
+                self.clear_display()
+                self.goto_saved_cursor_position()
+
         elif mode == '2':
-            self.noKeyClick = setMode
+            self.noKeyClick = set_mode
         elif mode == '3':
-            self.holdScreenMode = setMode
+            self.holdScreenMode = set_mode
         elif mode == '4':
-            self.blockCursor = setMode
-            if setMode:
+            self.blockCursor = set_mode
+            if set_mode:
                 curses.curs_set(CURSOR_BLOCK)
             else:
                 curses.curs_set(CURSOR_NORMAL)
         elif mode == '5':
-            self.cursorOff = setMode
-            if setMode:
+            self.cursorOff = set_mode
+            if set_mode:
                 curses.curs_set(CURSOR_INVISIBLE)
             else:
                 curses.curs_set(CURSOR_NORMAL)
         elif mode == '6':
-            self.keypadShiftedMode = setMode
-            if setMode:
+            self.keypadShiftedMode = set_mode
+            if set_mode:
                 self.enter_keypad_shifted_mode()
             else:
                 self.exit_keypad_shifted_mode()
         elif mode == '7':
-            self.alternateKeypadMode = setMode
-            if setMode:
+            self.alternateKeypadMode = set_mode
+            if set_mode:
                 self.enter_alternate_keypad_mode()
             else:
                 self.exit_alternate_keypad_mode()
         elif mode == '8':
-            self.autoLinefeedMode = setMode
+            self.autoLinefeedMode = set_mode
         elif mode == '9':
-            self.autoCarriageReturnMode = setMode
+            self.autoCarriageReturnMode = set_mode
 
 
     def enter_ansi_mode(self):
@@ -1794,37 +1828,33 @@ class H19Term(H19Keys, H19Screen):
 # position is to add it before and then insert the previous char which
 # we saved with inch()
     def addchar(self, ch, sio):
-        y,x = self.screen.getyx()
-        if self.graphicsMode:
+        cn = ord(ch)
+        y, x = self.screen.getyx()
+        if self.graphicsMode and cn >=94 and cn <= 126:
             if self.wrapAtEndOfLine:
-                if ord(ch) in self.h19_graphics:
-                    self.screen.addstr(self.h19_graphics[ord(ch)].encode('UTF_8'))
+                if x == 79:
+                    self.screen.insstr(self.h19_graphics[cn - 94])
+                    self.screen.move(y+1, 0)
                 else:
-                    self.screen.addstr(ch)
+                    self.screen.addstr(self.h19_graphics[cn - 94])
             else:
                 if x == 79:
-                    c = self.screen.inch(y,78)
-                    if ord(ch) in self.h19_graphics:
-                        self.screen.addstr(y,78,self.h19_graphics[ord(ch)].encode('UTF_8'))
-                        self.screen.insstr(y,78, chr(c).encode('UTF_8'))
-                    else:
-                        self.screen.addch(y,78,ch)
-                        self.screen.insch(y,78,c)
-                    self.screen.move(y,79)
+                    self.screen.insstr(self.h19_graphics[cn - 94])
                 else:
-                    if ord(ch) in self.h19_graphics:
-                        self.screen.addstr(self.h19_graphics[ord(ch)].encode('UTF_8'))
-                    else:
-                        self.screen.addch(ch)
+                   if self.insertMode:
+                       self.screen.insstr(self.h19_graphics[cn - 94])
+                   else:
+                       self.screen.addstr(self.h19_graphics[cn - 94])
         else:
             if self.wrapAtEndOfLine:
-                self.screen.addch(ch)
-            else:
                 if x == 79:
-                    c = self.screen.inch(y,78)  # save char at col 78
-                    self.screen.addch(y,78, ch) # add char
-                    self.screen.insch(y,78, c) # insert saved char
-                    self.screen.move(y,79)     # reset cursor to col 79
+                    self.screen.insstr(ch)
+                    self.screen.move(y+1, 0)
+                else:
+                    self.screen.addch(ch)
+            else:   # discard at end of line
+                if x == 79:
+                    self.screen.insstr(ch)
                 else:
                     if self.insertMode:
                         self.screen.insch(ch)
@@ -1914,8 +1944,11 @@ class H19Term(H19Keys, H19Screen):
     def main(self, scr, term, sio):
 
         scn, st = term.setup_screen()
-
         term.reset()
+
+        # Create a sine wave, with a pitch of 25, for use with the H19 BELL.
+        self.sinewave = SineWave(pitch=25)
+        self.bell_start_time = 0.0
 
         # if curses.termname() == 'linux':
         self.BACKSPACE = curses.KEY_BACKSPACE
@@ -1948,6 +1981,9 @@ class H19Term(H19Keys, H19Screen):
         while True:
             c = NOCHAR
 
+            # reset bell after a second, don't ask it will be fixed.
+            if time.time() - self.bell_start_time > 1.0:
+                self.bell_start_time = 0.0
             # Make sure keys don't repeat too fast.
             nowtime = time.time()
             c = scn.getch()
@@ -1968,7 +2004,7 @@ class H19Term(H19Keys, H19Screen):
                 loop_time = 0.0
 
                 if first_char:
-                    term.clear_display()
+                    term.clear_display(reset=True)
                     first_char = False
                     curses.curs_set(CURSOR_NORMAL)
 
@@ -1979,7 +2015,7 @@ class H19Term(H19Keys, H19Screen):
             if len(sc) >= 1:
                 loop_time = 0.0
                 if first_char:
-                    term.clear_display()
+                    term.clear_display(reset=True)
                     first_char = False
 
                 # Don't bother with this after a couple of screens, resets with CTRL-A R

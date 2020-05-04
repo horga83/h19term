@@ -11,13 +11,12 @@
  
  
  Raspberry Pi Installs:
- ----------------------
- If you are running on a RASPBERRY PI you can run the 
- h19term-raspi-install.sh script.  This script assumes you are running
- RASPBIAN on your Pi.
+ --------------------------
+ If you are running on a RASPBERRY PI you MUST run the 
+ h19term-raspi-install.sh script instead.
 
   
- Non Raspberry Pi Installs:
+ Desktop Linux Installs:
  --------------------------
  
  Install PySerial
@@ -31,12 +30,12 @@
  
  Fedora and other RPM distros seach for pyserial.
  
- Untar H19term
+ Unzip H19term
  --------------
  Next unzip the h19term.zip to either your home directory or alternatively 
  any directory you like. If you want to install it somewhere other than 
- your $HOME, you will need to adjust the "installpath" setting in your 
- .h19termrc file.  
+ /usr/local/, you will need to adjust the "installpath" setting in your 
+ .h19termrc file and edit the install script or install manually.
  
  NOTE: You MUST run H19term at least once to create an initial .h19termrc file.
  
@@ -45,18 +44,45 @@
    h19-keys.odt
    ascii.txt
    beep1.wav
+   h19term
    h19term.py
+   h19term.xpm
+   h19term.desktop
+   h19term-raspi-install.sh
+   install.sh
    cpm-help.txt
    H19term16x32.psfu.gz
    H19term14x28.psfu.gz
    H19term12x24.psfu.gz
    H19term10x20.psfu.gz
+   Heathkit-H19-bitmap.otb
+
+Run the Install
+---------------
+Open a terminal in the folder where you unzipped the files and type 
+"sudo ./install.sh" at the prompt, or you can become the "root" user and 
+run it.
+
+Setup Terminal
+--------------------
+I use Gnome Terminal and setup an H8 profile for it.  XFCE Terminal doesn't 
+seem to allow profiles, too bad.  KDE console does I believe.
+
+You can edit the /usr/local/bin/h19term file to change your terminal.
+
+Set these things in your profile or terminal:
+ Size:      - Must be 82x31 at least, larger looks odd but it will work.
+ Font:      - Set the font to Heathkit-H19-bitmap
+ Backspace: - Set Backspace to generate Control-H
+ Delete:    - Set Delete key to generate ASCII DEL
  
- Make it executable
- ------------------    
- Make the h19term.py file executable with the "chmod" command:
-   chmod +x h19term.py
  
- Run the program from a terminal or Linux console by typing:
+Run the program from a terminal by typing:
  
- $ ./h19term.py<enter>
+ $ h19term<enter>
+ 
+You should be able to find H19term in your desktop menus or search 
+for it by hitting the "Super" or "Windows" key and typing h19.
+
+Enjoy.
+

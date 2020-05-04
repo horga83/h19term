@@ -14,7 +14,7 @@
  
  
  TABLE OF CONTENTS
- ------------------------------------------------------------------------------
+ ---------------------------------------------------------------------------
  
  FEATURES
  USAGE
@@ -39,7 +39,7 @@
  
  
  FEATURES
- ------------------------------------------------------------------------------
+ ---------------------------------------------------------------------------
  H19term aims to provide close to 100 percent software emulation of the
  Heathkit H19, also known as Zenith Z19, hardware video terminal. 
 
@@ -77,7 +77,7 @@
  
  
  USAGE
- ------------------------------------------------------------------------------
+ ---------------------------------------------------------------------------
  Once H19term is installed and running there are a couple of things you 
  should be aware of.  Keymappings are as follows:
   
@@ -94,9 +94,9 @@
   
  F9 - is a special key to emulate the SHIFT-ARROW function on the H19.
   
- At certain times one is required to press the SHIFT key on the H19 to access
- the arrow and other functions on the H19 keypad.  This must be emulated by 
- toggling the keypad with the F9 key.  
+ At certain times one is required to press the SHIFT key on the H19 to 
+ access the arrow and other functions on the H19 keypad.  This must be 
+ emulated by toggling the keypad with the F9 key.  
  
  F10 - is equivilant to the H19 Keypad ENTER key.
  
@@ -133,28 +133,29 @@
  When serial data logging is turned on it will show in the bottom right of 
  the status line.  Data is logged to a file with the name "h19term.log".  
  Outgoing bytes are enclosed in a "<>" pair to seperate them from incoming 
- bytes.  The file is opened in append mode so you can turn it on and off as you
- desire without loosing previous information.
+ bytes.  The file is opened in append mode so you can turn it on and off 
+ as you desire without loosing previous information.
  
- I also have included an h19-keys.odt Open Document file that you can edit with 
- LibreOffice and print a layout of your keyboard.
+ I also have included an h19-keys.odt Open Document file that you can edit 
+ with LibreOffice and print a layout of your keyboard.
  
  Auto Date Function
  ------------------
- When CP/M with clock patches or HDOS boots they will request the date and in
- the case of CP/M time.  If you enable this function under editable options 
- when installing, H19term will watch for incoming characters and automatically
- insert todays date and time.
+ When CP/M with clock patches or HDOS boots they will request the date and
+ in the case of CP/M time.  If you enable this function under editable
+ options when installing, H19term will watch for incoming characters and 
+ automatically insert todays date and time.
  
  
  COLOUR SUPPORT
- ------------------------------------------------------------------------------
+ ---------------------------------------------------------------------------
  H19term has support for changing the colour of the characters, for those of 
  us that remember the days of amber and green screens.  Colour support is
- limited to 7 colours: white, green, yellow/amber, blue, cyan, magenta and red.
+ limited to 7 colours: white, green, yellow/amber, blue, cyan, magenta and 
+ red.
  
- Colour is configured differently depending on whether you are running H19term
- under X11 or directly on the Linux console.
+ Colour is configured differently depending on whether you are running 
+ H19term under X11 or directly on the Linux console.
  
  Setting terminal colour
  ----------------------
@@ -168,8 +169,8 @@
  
  X11 GUI applications
  --------------------
- For X11 applications you must adjust the palette in your terminal application.
- Here is an example using gnome-terminal:
+ For X11 applications you must adjust the palette in your terminal 
+ application. Here is an example using gnome-terminal:
  
  Open the preferences for your profile in gnome-terminal by selecting:
  Edit->Profile Preferences->Colours.
@@ -178,22 +179,22 @@
  Choose "White on Black" for the "Built-in scheme".
  Under "Palette" and "Built-in Schemes", choose "Custom".
  
- Under the "Palette" section you can modify the top row of colours and change
- the hue and saturation for the select colour.  Once you are finished, run 
- H19term and press CTRL-A C and select the desired colour.
+ Under the "Palette" section you can modify the top row of colours and 
+ change the hue and saturation for the select colour.  Once you are 
+ finished, run H19term and press CTRL-A C and select the desired colour.
  
  Linux console
  -------------
- Changing colours on the Linux console is of course different.  In the H19term
- configuration file, .h19termrc, you will find a section that lists the
- colours.  
+ Changing colours on the Linux console is of course different.  In the 
+ H19term configuration file, .h19termrc, you will find a section that lists
+ the colours.  
  
  Each colour is a standard 6 digit hexidecimal number that represents
  Red, Green and Blue colours.  These numbers range from 0 to FF.  You can 
  easily check colour settings and hex values at www.color-hex.com.  Once you
- have colours you want to try, edit your .h19termrc file and change the default
- values that are set.  Here are the defaults in case you want to reset them
- at some point:
+ have colours you want to try, edit your .h19termrc file and change the 
+ default values that are set.  Here are the defaults in case you want to 
+ reset them at some point:
  
  white = FFFFFF
  green = 00AA00
@@ -207,16 +208,17 @@
   
  
  INSTALLATION
- ------------------------------------------------------------------------------
- H19term is written in Python and currently uses version 2.7.x.  I have found 
- this to be installed on all Linux distributions to date so you shouldn't have
- to install it. H19term is not written for Python 3.x, if you want to use 
- that you will have to port it over which shouldn't be too difficult.
+ ---------------------------------------------------------------------------
+ H19term is written in Python and currently uses version 2.7.x.  I have 
+ found this to be installed on all Linux distributions to date so you 
+ shouldn't have to install it. H19term is not written for Python 3.x, if you
+ want to use that you will have to port it over which shouldn't be too 
+ difficult.
  
- I have tried to keep the requirements to a minimum so the only other packages
- you will require is the PySerial module. Please note that as of the release of
- Python 3.x there are now packages specific to the Python version, make sure 
- you install the correct one.
+ I have tried to keep the requirements to a minimum so the only other 
+ packages you will require is the PySerial module. Please note that as of 
+ the release of Python 3.x there are now packages specific to the Python 
+ version, make sure you install the correct one.
  
  Install PySerial
  ----------------
@@ -232,11 +234,12 @@
  Untar H19term
  --------------
  Next untar the h19term-vxx.tar.gz ("xx" is the version) to either your home 
- directory or alternatively any directory you like. If you want to install it 
- somewhere other than your $HOME, you will need to adjust the "installpath"
- setting in your .h19termrc file.  
+ directory or alternatively any directory you like. If you want to install 
+ it somewhere other than your $HOME, you will need to adjust the 
+ "installpath" setting in your .h19termrc file.  
  
- NOTE: You MUST run H19term at least once to create an initial .h19termrc file.
+ NOTE: You MUST run H19term at least once to create an initial .h19termrc 
+ file.
  
  You should end up with the following files from the tar ball:
    h19-readme.txt
@@ -302,8 +305,8 @@
  ------------------------ end of file---------------------------
  
  soundpath    - The sound file for the terminal beep
- installpath  - Where h19term.py will look for it's data files. Should be your
-                home directory by default.
+ installpath  - Where h19term.py will look for it's data files. Should be 
+                your home directory by default.
  
  port         - The serial port to use
  baudrate     - Speed of the serial link
@@ -315,18 +318,18 @@
  [Date] section explained below:
  
  You can also enable auto date and time insertion when booting CP/M or HDOS
- Each date/time setting program will display a prompt for setting the date or 
- time.  You must set the format strings to match the prompt.
+ Each date/time setting program will display a prompt for setting the date 
+ or time.  You must set the format strings to match the prompt.
  
  With "ZSDOS Time Stamp Loader" for CP/M you should be able to use the 
  defaults, just set "autocpmdate" to True.
  
- Basically H19term will look for the string held in cpmdate and cpmtime in the
- first 50 lines of a fresh boot.  If it finds a match a date and time string
- is sent.
+ Basically H19term will look for the string held in cpmdate and cpmtime in 
+ the first 50 lines of a fresh boot.  If it finds a match a date and time 
+ string is sent.
  
- HDOS is slightly more complex as it will spit out the last date that it stored
- so we must search for that string using a regex expression.  
+ HDOS is slightly more complex as it will spit out the last date that it 
+ stored so we must search for that string using a regex expression.  
  
  r"^Date.(\d\d-\w\w\w-\d\d)?." is described as follows:
  
@@ -344,11 +347,11 @@
   
  
  RASPBERRY PI
- ------------------------------------------------------------------------------
+ ---------------------------------------------------------------------------
  The Raspberry Pi board running under Raspbian sets the terminal to 60x160,
- 60 lines by 160 columns.  While this is fine it is better to have the terminal
- run with a larger font so it fills the screen.  We do this by re-configuring 
- the console.  Login and run the following:
+ 60 lines by 160 columns.  While this is fine it is better to have the 
+ terminal run with a larger font so it fills the screen.  We do this by 
+ re-configuring the console.  Login and run the following:
 
  NOTE:!!!  
  --------
@@ -380,25 +383,26 @@
  
  Serial Port
  -----------
- You will require a USB or other serial port, remember to edit .h19termrc and 
- set the correct serial port if you didn't set it on first run.
+ You will require a USB or other serial port, remember to edit .h19termrc 
+ and set the correct serial port if you didn't set it on first run.
  
  I actually mounted my Pi board to the back of the LCD monitor with strong 
  double sided tape so I only have a keyboard and monitor on the desk.
  
- You of course do not require the Pi to be plugged into the network after the
- correct packages have been installed.
+ You of course do not require the Pi to be plugged into the network after 
+ the correct packages have been installed.
  
  In order for the speaker to beep you will need to plug one into the Pi.
  
  
  OTHER INFO
- ------------------------------------------------------------------------------
- If you have questions, bug reports, patches or feature requests please email
- me at farrisg@gmsys.com
+ ---------------------------------------------------------------------------
+ If you have questions, bug reports, patches or feature requests please 
+ email me at farrisg@gmsys.com
  
- If you just want to buy me a coffee or beer then I live on Vancouver Island,
- British Columbia, Canada and am always available:-)  Please come and visit.
+ If you just want to buy me a coffee or beer then I live on Vancouver 
+ Island, British Columbia, Canada and am always available:-)  Please come 
+ and visit.
  
  
  
