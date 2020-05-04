@@ -10,7 +10,7 @@
  H19 TERMINAL EMULATOR
  
  Copyright (c) 2014 George Farris - farrisga@gmail.com
- Licensed under version 3 of the GNU General Public License
+ Licensed under version 3 of the GNU General Public License.
  
  
  TABLE OF CONTENTS
@@ -51,19 +51,19 @@
  Supports 25th line.
  Support all graphics characters.
  Custom font files for the Linux console, includes Raspberry Pi
+ Custom font for X11 based terminals such as gnome-terminal
  Serial Port logging.
+ Selectable serial ports and baud rates
  Help files available for ascii characters, CP/M quick help and user manual.
  Easily configurable in .h19termrc file
  Colour changing mode for Amber and Green or other colours.
  Help files directly inside h19term.
- 
- Ascii table
- User Manual
- CP/M quick help.
+  Ascii table
+  User Manual
+  CP/M quick help.
    
  Runs on the Linux console or in most X11 terminal emulators such as
- gnome-terminal and xterm.  I have found that the terminal in XFCE does
- not work.
+ gnome-terminal, XFCE4-terminal and Konsole.  
  
  Future features planned:
 
@@ -92,8 +92,8 @@
  ERASE     F11   
  OFFLINE   F12
   
- F9 - is a special key to emulate the SHIFT-ARROW function on the H19.
-  
+ F9 - Is a special key to emulate the SHIFT-ARROW function on the H19.
+
  At certain times one is required to press the SHIFT key on the H19 to 
  access the arrow and other functions on the H19 keypad.  This must be 
  emulated by toggling the keypad with the F9 key.  
@@ -123,22 +123,25 @@
  Ctrl-A L   Toggle logging of serial data to h19term.log
  Ctrl-A M   Show this user manual
  Ctrl-A Q   CP/M Quick Help
+ Ctrl-A P   Select serial port and baud rate
  Ctrl-A R   Reset the terminal to power up mode
  Ctrl-A X   Exit h19term
  Ctrl-A Z   Help screen
  Ctrl-A Ctrl-A   Send a CTRL-A through to application.
   
+
  Serial Port Logging
  -------------------
  When serial data logging is turned on it will show in the bottom right of 
  the status line.  Data is logged to a file with the name "h19term.log".  
- Outgoing bytes are enclosed in a "<>" pair to seperate them from incoming 
+ Outgoing bytes are enclosed in a "{{}}" pairs to seperate them from incoming 
  bytes.  The file is opened in append mode so you can turn it on and off 
  as you desire without loosing previous information.
  
  I also have included an h19-keys.odt Open Document file that you can edit 
  with LibreOffice and print a layout of your keyboard.
  
+
  Auto Date Function
  ------------------
  When CP/M with clock patches or HDOS boots they will request the date and
@@ -182,6 +185,8 @@
  Under the "Palette" section you can modify the top row of colours and 
  change the hue and saturation for the select colour.  Once you are 
  finished, run H19term and press CTRL-A C and select the desired colour.
+
+ I find a yellow text #C4A000 with #2E3436 background is nice.
  
  Linux console
  -------------
@@ -209,61 +214,90 @@
  
  INSTALLATION
  ---------------------------------------------------------------------------
- H19term is written in Python and currently uses version 2.7.x.  I have 
- found this to be installed on all Linux distributions to date so you 
- shouldn't have to install it. H19term is not written for Python 3.x, if you
- want to use that you will have to port it over which shouldn't be too 
- difficult.
+ H19term is written in Python and currently uses version 3.6 or greater.  
+ I have found  this to be installed on all Linux distributions to date so you 
+ shouldn't have to install it. 
  
- I have tried to keep the requirements to a minimum so the only other 
- packages you will require is the PySerial module. Please note that as of 
- the release of Python 3.x there are now packages specific to the Python 
- version, make sure you install the correct one.
+ I have tried to keep the requirements to a minimum so the only other package
+ you should require is the PySerial module. Please note that as of the release 
+ of Python 3.x there are now packages specific to the Python version, make 
+ sure you install the correct one.
+ 
+ 
+ Raspberry Pi Installs:
+ --------------------------
+ If you are running on a RASPBERRY PI you MUST run the 
+ h19term-raspi-install.sh script instead.
+
+  
+ Desktop Linux Installs:
+ --------------------------
  
  Install PySerial
  ----------------
  Raspbian, Debian, Ubuntu and Mint users can easily install this with the 
  following command:
-   sudo apt-get install python-serial
+   sudo apt-get install python3-serial
 
  Arch and Manjaro users install with:
-   sudo pacman -S python2-pyserial
+   sudo pacman -S python-pyserial
  
  Fedora and other RPM distros seach for pyserial.
  
- Untar H19term
+ Unzip H19term
  --------------
- Next untar the h19term-vxx.tar.gz ("xx" is the version) to either your home 
- directory or alternatively any directory you like. If you want to install 
- it somewhere other than your $HOME, you will need to adjust the 
- "installpath" setting in your .h19termrc file.  
+ Next untar h19term-install.tar.gz to either your home directory or alternatively 
+ any directory you like. If you want to install it somewhere other than 
+ /usr/local/, you will need to adjust the "installpath" setting in your 
+ .h19termrc file and edit the install script or install manually.
  
- NOTE: You MUST run H19term at least once to create an initial .h19termrc 
- file.
+ NOTE: You MUST run H19term at least once to create an initial .h19termrc file.
  
  You should end up with the following files from the tar ball:
    h19-readme.txt
    h19-keys.odt
    ascii.txt
    beep1.wav
+   h19term
    h19term.py
+   h19term.xpm
+   h19term.desktop
+   h19term-raspi-install.sh
+   install.sh
    cpm-help.txt
    H19term16x32.psfu.gz
    H19term14x28.psfu.gz
    H19term12x24.psfu.gz
    H19term10x20.psfu.gz
+   Heathkit-H19-bitmap.otb
+
+
+Run the Install
+---------------
+Open a terminal in the folder where you unzipped the files and type 
+"sudo ./install.sh" at the prompt, or you can become the "root" user and 
+run it.
+
+Setup Terminal
+--------------------
+I use Gnome Terminal and setup an H8 profile for it.  XFCE Terminal doesn't 
+seem to allow profiles, too bad.  KDE console does I believe.
+
+You can edit the /usr/local/bin/h19term file to change your terminal.
+
+Set these things in your profile or terminal:
+ Size:      - Must be 82x31 at least, larger looks odd but it will work.
+ Font:      - Set the font to Heathkit-H19-bitmap
+ Backspace: - Set Backspace to generate Control-H
+ Delete:    - Set Delete key to generate ASCII DEL
  
- Make it executable
- ------------------    
- Make the h19term.py file executable with the "chmod" command:
-   chmod +x h19term.py
+Run the program from a terminal by typing:
  
- Run the program from a terminal or Linux console by typing:
+ $ h19term<enter>
  
- $ ./h19term.py<enter>
+You should be able to find H19term in your desktop menus or search 
+for it by hitting the "Super" or "Windows" key and typing h19.
  
- If you have never run H19term before you will be asked to select your 
- serial port and also edit the configuration file to change other settings.
  
  Configuration
  -------------
@@ -273,10 +307,10 @@
  ------------------------ .h19termrc---------------------------
  [General]
  soundfile = beep1.wav
- installpath = /home/<your home>
+ installpath = /usr/local/share/h19term
 
  [SerialComms]
- port = /dev/ttyR3
+ port = /dev/ttyS1
  baudrate = 9600
 
  [Fonts]
@@ -305,14 +339,14 @@
  ------------------------ end of file---------------------------
  
  soundpath    - The sound file for the terminal beep
- installpath  - Where h19term.py will look for it's data files. Should be 
-                your home directory by default.
+ installpath  - Where h19term.py will look for it's data files, it
+                is set to /usr/local/share/h19term by default.
  
  port         - The serial port to use
  baudrate     - Speed of the serial link
  
  preload      - Whether h19term will attempt to preload the font file
- font         - The font file to preload
+ font         - The font file to preload for the Linux console.
  
  
  [Date] section explained below:
@@ -383,16 +417,16 @@
  
  Serial Port
  -----------
- You will require a USB or other serial port, remember to edit .h19termrc 
- and set the correct serial port if you didn't set it on first run.
+ You will require a USB or other serial port.
  
  I actually mounted my Pi board to the back of the LCD monitor with strong 
  double sided tape so I only have a keyboard and monitor on the desk.
  
- You of course do not require the Pi to be plugged into the network after 
- the correct packages have been installed.
+ You do not require the Pi to be plugged into the network after the correct
+ packages have been installed.
  
- In order for the speaker to beep you will need to plug one into the Pi.
+ In order for the speaker to beep you will need to plug one into the Pi
+ audio jack.
  
  
  OTHER INFO

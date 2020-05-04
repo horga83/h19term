@@ -11,12 +11,12 @@
  H19 TERMINAL EMULATOR
  
  Copyright (c) 2014 George Farris - farrisga@gmail.com
- Licensed under version 3 of the GNU General Public License
+ Licensed under version 3 of the GNU General Public License.
  
  H19term aims to provide close to 100 percent software emulation of the
  Heathkit H19, also known as Zenith Z19, hardware video terminal. 
 
- **Latest version V2.0**
+ **Latest version V2.1**
 
  It currently has the following features:
  
@@ -26,7 +26,9 @@
    - Supports 25th line.
    - Support all graphics characters.
    - Custom font files for the Linux console, includes Raspberry Pi
+   - Custom font for X11 based terminals such as gnome-terminal
    - Serial Port logging.
+   - Selectable serial ports and baud rates
    - Easily configurable in .h19termrc file
    - Colour changing mode for Amber and Green or other colours.
    - Help files directly inside h19term.
@@ -36,7 +38,7 @@
    
  Runs on the Linux console or in most X11 terminal emulators such as
  gnome-terminal and xterm.  I have found that the terminal in XFCE does
- not work.
+ not work as well.
  
  [Readme](https://github.com/horga83/h19term/blob/master/h19-readme.txt)
  
