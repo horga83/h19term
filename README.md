@@ -38,8 +38,8 @@
  gnome-terminal and xterm.  I have found that the terminal in XFCE does
  not work.
  
- [Readme](https://github.com/horga83/h19term/edit/python3/h19-readme.txt)
+ [Readme](https://github.com/horga83/h19term/h19-readme.txt)
  
- [Installation](https://github.com/horga83/h19term/edit/python3/INSTALLATION.txt)
+ [Installation](https://github.com/horga83/h19term/INSTALLATION.txt)
  
 ![](h19term.png?raw=true)
