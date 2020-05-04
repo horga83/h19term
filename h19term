@@ -1,3 +1,6 @@
 #!/bin/bash 
 gnome-terminal --profile H8 -t H19term -- /usr/local/bin/h19term.py
+#mate-terminal --profile H8 -t H19term -- /usr/local/bin/h19term.py
+#konsole --profile H8 -e /usr/local/bin/h19term.py
+#xfce4-terminal --title=H19term --geometry=82x31 --font=Heathkit-H19-bitmap -e /usr/local/bin/h19term.py
 
