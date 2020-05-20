@@ -1,6 +1,42 @@
 #!/bin/bash 
-gnome-terminal --profile H8 -t H19term -- /usr/local/bin/h19term.py
-#mate-terminal --profile H8 -t H19term -- /usr/local/bin/h19term.py
-#konsole --profile H8 -e /usr/local/bin/h19term.py
-#xfce4-terminal --title=H19term --geometry=82x31 --font=Heathkit-H19-bitmap -e /usr/local/bin/h19term.py
+if [ $TERM == "linux" ]; then
+    /usr/local/bin/h19term.py
+    exit
+fi
+
+TERMINAL=1
+
+# We get here if we are running under X11
+case "$TERMINAL" in
+    1)
+        if [ -f "/usr/bin/gnome-terminal" ]; then
+            gnome-terminal --profile H8 -t H19term -- /usr/local/bin/h19term.py
+            exit
+        fi
+        ;;    
+    2)
+        if [ -f "/usr/bin/mate-terminal" ]; then
+            mate-terminal --profile H8 -t H19term -- /usr/local/bin/h19term.py
+            exit    
+        fi
+        ;;    
+    3)
+        if [ -f "/usr/bin/xfce4-terminal" ]; then
+            xfce4-terminal --title=H19term --geometry=82x31 --font=Heathkit-H19-bitmap -e /usr/local/bin/h19term.py
+            exit    
+        fi
+        ;;
+    4)
+        if [ -f "/usr/bin/konsole" ]; then
+            konsole --profile H8 -e /usr/local/bin/h19term.py
+            exit    
+        fi
+        ;;    
+esac
+
+
+
+#
+#
+#
 

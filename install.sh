@@ -61,8 +61,57 @@ fi
     echo "Making sure h19term and h19term.py are executable..."
     chmod +x /usr/local/bin/h19term
     chmod +x /usr/local/bin/h19term.py
-                
 
+    echo
+    echo "We now need to select a default terminal when running under a"
+    echo "Linux Graphical Desktop."
+    re='^[0-9]+$'
+    while [ 1 ]
+    do
+        echo
+        echo "Please select one of the following:"
+        echo "1) GNOME - gnome-terminal"
+        echo "2) Mate  - mate-terminal"
+        echo "3) XFCE  - xfce4-terminal"
+        echo "4) KDE   - konsole" 
+        echo -n "Your choice, or CTRL-C to exit : " ; read MYTERM
+
+        # Is it a digit?
+        if ! [[ $MYTERM =~ $re ]] ; then
+            echo
+            echo "Error: Not a number..."
+            sleep .5
+            continue
+        fi
+        if [ $MYTERM -lt 1 ] || [ $MYTERM -gt 4 ]; then
+            echo
+            echo "Must select between 1 and 4..."
+            sleep .5
+            continue
+        else
+            break
+        fi
+    done
+
+    case "$MYTERM" in
+        1)
+            echo "You have selected Gnome Terminal..."
+            ;;
+        2)
+            echo "You have selected Mate Terminal..."
+            ;;
+        3)
+            echo "You have selected XFCE4 Terminal..."
+            ;;
+        4)
+            echo "You have selected KDE Konsole Terminal..."
+            ;;
+    esac
+    
+    echo "Editing /usr/local/bin/h19term script.."    
+    sed -i "s/TERMINAL=[1234]/TERMINAL=$MYTERM/g" /usr/local/bin/h19term
+    echo
+    
     echo "[ FINISHED... ]"
 
     echo

@@ -71,6 +71,7 @@
 # Apr 11, 2020   V2.0  Python 3 version
 # May 02, 2020   V2.1  Added Heathkit-H19-bitmap font for desktop use.
 #                      Many fixes.
+# May 16, 2020   V2.2  Added Xmodem support.
 
 import os
 import re
@@ -83,6 +84,7 @@ import string
 import datetime
 import configparser
 from pysinewave import SineWave
+
 
 # This must be set to output unicode characters
 locale.setlocale(locale.LC_ALL, '')
@@ -223,38 +225,38 @@ class H19Screen:
 
 
     h19_graphics = [
-        '\u25CF',  # ^ '⚫' BLACK CIRCLE
-        '\u25E5',  # - '◥' UPPER RIGHT TRIANGLE
-        '\u2503',  # ` '│' LIGHT VERTICLE LINE
-        '\u2501',  # a '─' LIGHT HORIZONTAL LINE
-        '\u254B',  # b '┼' LIGHT PLUS
-        '\u2513',  # c '┐' LIGHT UPPER RIGHT CORNER
-        '\u251B',  # d '┘' LIGHT LOWER RIGHT CORNER
-        '\u2517',  # e '└' LIGHT LOWER LEFT CORNER
-        '\u250F',  # f '┌' LIGHT UPPER LEFT CORNER
-        '\u00B1',  # g '±' LIGHT PLUS MINUS
-        '\u279C',  # h '→' RIGHT ARROW
-        '\u2591',  # i '▒' MEDIUM SHADE
-        '\u259A',  # j '▚' QUADRANT UPPER LEFT LOWER R
-        '\u2B07',  # k '↓' DOWN ARROW
-        '\u2597',  # l '▗' QUADRANT LOWER RIGHT
-        '\u2596',  # m '▖' QUADRANT LOWER LEFT
-        '\u2598',  # n '▘' QUADRANT UPPER LEFT
-        '\u259D',  # o '▝' QUADRANT UPPER RIGHT
-        '\u2580',  # p '▀' UPPER HALF BLOCK
-        '\u2590',  # q '▐' RIGHT HALF BLOCK
-        '\u25E4',  # r '◤' UPPER LEFT TRIANGLE
-        '\u2533',  # s '┬' LIGHT DOWN HORIZONTAL
-        '\u252B',  # t '┤' LIGHT VERTICAL LEFT
-        '\u253B',  # u '┴' LIGHT UP HORIZONTAL
-        '\u2523',  # v '├' LIGHT VERTICAL RIGHT
-        '\u2573',  # w '╳' LIGHT CROSS
-        '\u2571',  # x '╱' LIGHT RIGHT
-        '\u2572',  # y '╲' LIGHT LEFT
-        '\u2594',  # z '▔' UPPER HORIZONTAL LINE
-        '\u2581',  # { '▁' LOWER HORIZONTAL LINE
-        '\u258F',  # | '▏' LEFT VERTICAL LINE
-        '\u2595',  # } '▕' RIGHT VERTICAL LINE
+        '\u25CF',  # ^ '⚫' BLACK CIRCLE.
+        '\u25E5',  # - '◥' UPPER RIGHT TRIANGLE.
+        '\u2503',  # ` '│' LIGHT VERTICLE LINE.
+        '\u2501',  # a '─' LIGHT HORIZONTAL LINE.
+        '\u254B',  # b '┼' LIGHT PLUS.
+        '\u2513',  # c '┐' LIGHT UPPER RIGHT CORNER.
+        '\u251B',  # d '┘' LIGHT LOWER RIGHT CORNER.
+        '\u2517',  # e '└' LIGHT LOWER LEFT CORNER.
+        '\u250F',  # f '┌' LIGHT UPPER LEFT CORNER.
+        '\u00B1',  # g '±' LIGHT PLUS MINUS.
+        '\u279C',  # h '→' RIGHT ARROW.
+        '\u2591',  # i '▒' MEDIUM SHADE.
+        '\u259A',  # j '▚' QUADRANT UPPER LEFT LOWER R.
+        '\u2B07',  # k '↓' DOWN ARROW.
+        '\u2597',  # l '▗' QUADRANT LOWER RIGHT.
+        '\u2596',  # m '▖' QUADRANT LOWER LEFT.
+        '\u2598',  # n '▘' QUADRANT UPPER LEFT.
+        '\u259D',  # o '▝' QUADRANT UPPER RIGHT.
+        '\u2580',  # p '▀' UPPER HALF BLOCK.
+        '\u2590',  # q '▐' RIGHT HALF BLOCK.
+        '\u25E4',  # r '◤' UPPER LEFT TRIANGLE.
+        '\u2533',  # s '┬' LIGHT DOWN HORIZONTAL.
+        '\u252B',  # t '┤' LIGHT VERTICAL LEFT.
+        '\u253B',  # u '┴' LIGHT UP HORIZONTAL.
+        '\u2523',  # v '├' LIGHT VERTICAL RIGHT.
+        '\u2573',  # w '╳' LIGHT CROSS.
+        '\u2571',  # x '╱' LIGHT RIGHT.
+        '\u2572',  # y '╲' LIGHT LEFT.
+        '\u2594',  # z '▔' UPPER HORIZONTAL LINE.
+        '\u2581',  # { '▁' LOWER HORIZONTAL LINE.
+        '\u258F',  # | '▏' LEFT VERTICAL LINE.
+        '\u2595',  # } '▕' RIGHT VERTICAL LINE.
         '\u00B6',  # ~ '¶' PILCROW SIGN
     ]
 
@@ -1543,12 +1545,90 @@ class H19Term(H19Keys, H19Screen):
                 self.show_intro(scn)
                 self.firstChar = True
                 break
+            elif s == 's' or s == 'S':  # Reset terminal
+                self.xmodem_send()
 
             elif s == 'z' or s == 'Z':
                 s = self.popup_help()
 
             else:
                 break  # get out on ^M or any non command key
+
+    def popup_filename(self):
+#         cl = os.listdir('.')
+        try:
+            popup = curses.newwin(5, 58, 10, 10)
+            popup.attrset(curses.color_pair(0))
+            #popup.addstr(0,2, "Current directory is: [ ")
+            #popup.addstr(os.getcwd())
+            #popup.addstr(" ]")
+
+#
+#             for i in range(len(cl)):
+#                 popup.addstr(i + 3, 2, cl[i], curses.color_pair(0))
+#                 popup.addstr(23, 2, "<Enter> to select, 'q' quits")
+            popup.border('|', '|', '-', '-', '+', '+', '+', '+')
+            popup.addstr(0, 2, "[ ")
+            popup.addstr(os.getcwd())
+            popup.addstr(" ]")
+            popup.addstr(2, 2, "File: ")
+            curses.echo()
+            s = popup.getstr().decode(encoding="utf-8")
+            file = os.path.join(os.getcwd(), s)
+#             popup.addstr(0, 3, '[Baud Rate and Port Selection]')
+#             popup.nodelay(0)
+#             popup.keypad(1)
+#             curses.curs_set(0)
+            popup.refresh()
+            return file
+        except:
+            pass
+#
+#         # get the index to place the cursor
+#         idx = 0
+#         popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
+#
+#         while True:
+#             c = popup.getch()
+#             if c == curses.KEY_DOWN:
+#                 if idx == -1:
+#                     popup.addstr(idx + 3, 23, str(SERIAL_PORT)[5:], curses.color_pair(0) | curses.A_NORMAL)
+#                     idx += 1
+#                     popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
+#                 elif idx + 1 < len(cl):
+#                     popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_NORMAL)
+#                     idx += 1
+#                     popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
+#             elif c == curses.KEY_UP:
+#                 if idx == 0:
+#                     popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_NORMAL)
+#                     idx -= 1
+#                     popup.addstr(idx + 3, 23, str(SERIAL_PORT)[5:], curses.color_pair(0) | curses.A_REVERSE)
+#                 elif idx - 1 >= 0:
+#                     popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_NORMAL)
+#                     idx -= 1
+#                     popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
+#                 popup.refresh()
+#
+#             elif curses.keyname(c) == b'^M':
+#                 if idx == -1:
+#                     self.popup_port_select(sio)
+#                 else:
+#                     pass
+# #                    BAUD_RATE = BAUD_RATES[idx]
+# #                    sio.baudrate = BAUD_RATE
+#                 self.show_status_line()
+#                 self.write_h19config()
+#                 self.screen.touchwin()
+#                 self.screen.refresh()
+#                 curses.curs_set(1)
+#                 return
+#
+#             elif chr(c) == 'q':
+#                 self.screen.touchwin()
+#                 self.screen.refresh()
+#                 curses.curs_set(1)
+#                 return
 
     def popup_baud_rate(self, sio):
         global BAUD_RATE, BAUD_RATES
@@ -1940,6 +2020,67 @@ class H19Term(H19Keys, H19Screen):
             else:
                 self.bell()
 #                self.popup_error("For SHIFT ARROW keys, press F9, see help.")
+
+    def xmodem_send(self):
+        SOH = b'\x01'
+        EOT = b'\x04'
+        ACK = b'\x06'
+        NAK = b'\x15'
+
+        ser = serial.Serial('/dev/ttyS2', timeout=0)  # or whatever port you need
+        ser.baudrate = 19200
+        ser.xonoff = False
+        ser.rtscts = False
+        ser.dsrdtr = False
+
+        filename = self.popup_filename()
+        file = open(filename, 'rb')
+
+        t, anim = 0, '|/-\\'
+
+        ser.timeout = 1
+        while 1:
+            c = ser.read(1)
+            if c != NAK:
+                t = t + 1
+                sys.stdout.write(anim[t % len(anim)])
+                sys.stdout.write('\r')
+                if t == 60:
+                    return
+            else:
+                break
+
+        #print("Got NAK...")
+
+        p = 1
+        s = file.read(128)
+
+        while s:
+            if len(s) < 128:
+                s = s.ljust(128, b'\x1a')
+            chk = 0
+            for c in s:
+                chk += c
+            while 1:
+                ser.write(SOH)  # send SOH
+                ser.write(bytes([p]))  # send packet number
+                ser.write(bytes([0xFF - p]))  # send invert of packet number
+                ser.write(s)
+                ser.write(bytes([chk % 256]))  # send checksum
+                ser.flush()
+                answer = ser.read(1)
+                if answer == NAK:
+                    continue
+                if answer == ACK:
+                    break
+                return
+            s = file.read(128)
+            p = (p + 1) % 256
+
+            print('.', end='')
+
+        ser.write(EOT)
+        return True
 
     def main(self, scr, term, sio):
 
