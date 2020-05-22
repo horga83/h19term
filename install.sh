@@ -3,6 +3,32 @@
 # This script installs the H19term software on a Linux X11 desktop such
 # as GNOME or KDE.
 
+REMOVE()
+{
+   # I put sleeps in here just for human comfort:-)        
+    sleep .5
+    echo
+    echo "Changing to /usr/local/share/h19term..."
+    mwd=`pwd`
+    cd /usr/local/share/h19term
+    sleep .2
+    echo "Removing H19term files..."
+    rm -v *
+    sleep .1
+    rm -v /usr/local/share/applications/h19term.desktop 
+    sleep .1
+    rm -v /usr/local/bin/h19term
+    sleep .1
+    rm -v /usr/local/bin/h19term.py
+    sleep .1
+    rm -v /usr/local/share/icons/h19term.xpm
+    sleep .1
+    rm -v /usr/local/share/fonts/Heathkit-H19-bitmap.otb
+    sleep .1
+    echo "Removing /usr/local/share/h19term..."
+    rmdir -v /usr/local/share/h19term
+    cd $mwd
+}
 
 # Version 1 - May 02, 2020
 
@@ -19,14 +45,20 @@ fi
     echo
     echo "Installation script for installing H19term. "
     echo
-    echo "*****ATTENTION******"
-    echo "This script has only been tested on a fresh installation..."
-    echo
     echo "If you are proficient in Linux, you should view this script in detail"
     echo "before running it."
     echo
     echo -n "Press ENTER to continue, or CTRL-C to exit : " ; read ENTER
 
+    if [ -d "/usr/local/share/h19term" ]; then
+        echo "H19term is already installed, we will remove the old"
+        echo "installation before installing this version"
+        echo -n "Press ENTER to continue, or CTRL-C to exit : " ; read ENTER
+        REMOVE
+        echo
+        echo "Proceeding with installation..."
+        sleep 2
+    fi
 
     echo 
     echo "Making directories under /usr/local/share..."
@@ -73,7 +105,8 @@ fi
         echo "1) GNOME - gnome-terminal"
         echo "2) Mate  - mate-terminal"
         echo "3) XFCE  - xfce4-terminal"
-        echo "4) KDE   - konsole" 
+        echo "4) KDE   - konsole"
+        echo "5) Other" 
         echo -n "Your choice, or CTRL-C to exit : " ; read MYTERM
 
         # Is it a digit?
@@ -83,9 +116,9 @@ fi
             sleep .5
             continue
         fi
-        if [ $MYTERM -lt 1 ] || [ $MYTERM -gt 4 ]; then
+        if [ $MYTERM -lt 1 ] || [ $MYTERM -gt 5 ]; then
             echo
-            echo "Must select between 1 and 4..."
+            echo "Must select between 1 and 5..."
             sleep .5
             continue
         else
@@ -105,6 +138,10 @@ fi
             ;;
         4)
             echo "You have selected KDE Konsole Terminal..."
+            ;;
+        5)
+            echo "You have selected OTHER as your terminal..."
+            echo "You will have to hand edit the /usr/local/bin/h19term file."
             ;;
     esac
     

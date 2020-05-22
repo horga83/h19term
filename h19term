@@ -32,11 +32,9 @@ case "$TERMINAL" in
             exit    
         fi
         ;;    
+    5)
+        # add your custom terminal here
+        exit
+        ;;
 esac
-
-
-
-#
-#
-#
 
