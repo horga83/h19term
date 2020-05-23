@@ -19,9 +19,9 @@
  Desktop Linux Installs:
  --------------------------
  
- Install PySerial
- ----------------
- Raspbian, Debian, Ubuntu and Mint users can easily install this with the 
+ Install PySerial and PySinewave
+ -------------------------------
+ Raspbian, Debian, Ubuntu and Mint users can easily install PySerial with the 
  following command:
    sudo apt-get install python3-serial
 
@@ -29,6 +29,19 @@
    sudo pacman -S python-pyserial
  
  Fedora and other RPM distros seach for pyserial.
+
+ PySinewave needs to be installed with PIP.  If you don't have PIP please
+ install it with:
+   sudo apt-get install python3-pip
+   or
+   sudo pacman -S python-pip
+
+ Now install Pysinewave with:
+   sudo pip3 install Pysinewave
+
+ If you don't know what PIP is please see this:
+ https://pypi.org
+
  
  Unzip H19term
  --------------

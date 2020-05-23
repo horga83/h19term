@@ -89,6 +89,7 @@ fi
     cp -v h19term.xpm /usr/local/share/icons
     sleep .1
     cp -v Heathkit-H19-bitmap.otb /usr/local/share/fonts
+    cp -v Heathkit-H19.otf /usr/local/share/fonts
     sleep .2
     echo "Making sure h19term and h19term.py are executable..."
     chmod +x /usr/local/bin/h19term

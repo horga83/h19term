@@ -270,10 +270,13 @@ class H19Screen:
     #
     def bell(self):
         if time.time() - self.bell_start_time > 1.0 or self.bell_start_time == 0.0:
-            self.sinewave.play()
-            self.bell_start_time = time.time()
-            time.sleep(0.16)
-            self.sinewave.stop()
+            try:
+                self.sinewave.play()
+                self.bell_start_time = time.time()
+                time.sleep(0.16)
+                self.sinewave.stop()
+            except:
+                pass    # sometimes this fails with ugly python throw up
 
 
     def backspace(self, sio, ch): # H8 will return ^H <SPACE> ^H when we
@@ -538,9 +541,9 @@ class H19Term(H19Keys, H19Screen):
 
             try:
                 Config.read(CONFIG_FILE)
-                if Config.has_option('General', 'installpath'):
-                    INSTALL_PATH = Config.get('General', 'installpath')
-                else: updateFile = True
+                #if Config.has_option('General', 'installpath'):
+                #    INSTALL_PATH = Config.get('General', 'installpath')
+                #else: updateFile = True
                 if Config.has_option('General','KeyRepeatRate'):
                     KEY_REPEAT_RATE = Config.getfloat('General','KeyRepeatRate')
                 else: updateFile = True
@@ -682,7 +685,7 @@ class H19Term(H19Keys, H19Screen):
         Config.add_section('Colours')
         Config.add_section('Date')
         Config.set('General','SoundFile', BEEP)
-        Config.set('General','InstallPath', INSTALL_PATH)
+        #Config.set('General','InstallPath', INSTALL_PATH)
         Config.set('General','# Use caution when increasing repeat rate to avoid overruns')
         Config.set('General','KeyRepeatRate', str(KEY_REPEAT_RATE))
         Config.set('SerialComms','Port', SERIAL_PORT)
