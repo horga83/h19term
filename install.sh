@@ -140,6 +140,8 @@ if [ $OS == "Debian" ]; then
     echo
     apt-get install python3-pyserial
     apt-get install python3-pip
+    apt-get install python3-dev
+    apt-get install python3-setuptools
     pip3 install pysinewave
     pip3 install pyaudio
 elif [ $OS == "arch" ]; then
@@ -148,6 +150,7 @@ elif [ $OS == "arch" ]; then
     echo
     pacman -S python-pyserial
     pacman -S python-pip
+    pacman -S python-setuptools
     pip3 install pysinewave
     pip3 install pyaudio
 fi
