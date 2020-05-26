@@ -52,7 +52,7 @@ Go to the Preferences in your terminal of choice and add an "H8" profile.
 
 Set these things in your profile or terminal:
  Size:      - Must be 82x31 at least, larger looks odd but it will work.
- Font:      - Set the font to Heathkit-H19-bitmap
+ Font:      - Set the font to Heathkit-H19-bitmap or Heathkit-H19.
  Backspace: - Set Backspace to generate Control-H
  Delete:    - Set Delete key to generate ASCII DEL
  
