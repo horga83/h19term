@@ -1,5 +1,8 @@
  INSTALLATION
  ------------------------------------------------------------------------------
+
+ Please take note of the MANDATORY step below.
+
  H19term is written in Python and currently uses version 3.6 or greater.  
  I have found  this to be installed on all Linux distributions to date so you 
  shouldn't have to install it. 
@@ -10,65 +13,19 @@
  sure you install the correct one.
  
  
- Raspberry Pi Installs:
- --------------------------
- If you are running on a RASPBERRY PI you MUST run the 
- h19term-raspi-install.sh script instead.
-
-  
- Desktop Linux Installs:
- --------------------------
- 
- Install PySerial and PySinewave
- -------------------------------
- Raspbian, Debian, Ubuntu and Mint users can easily install PySerial with the 
- following command:
-   sudo apt-get install python3-serial
-
- Arch and Manjaro users install with:
-   sudo pacman -S python-pyserial
- 
- Fedora and other RPM distros seach for pyserial.
-
- PySinewave needs to be installed with PIP.  If you don't have PIP please
- install it with:
-   sudo apt-get install python3-pip
-   or
-   sudo pacman -S python-pip
-
- Now install Pysinewave with:
-   sudo pip3 install Pysinewave
-
- If you don't know what PIP is please see this:
- https://pypi.org
-
- 
- Unzip H19term
+ Untar H19term
  --------------
- Next unzip the h19term.zip to either your home directory or alternatively 
- any directory you like. If you want to install it somewhere other than 
- /usr/local/, you will need to adjust the "installpath" setting in your 
- .h19termrc file and edit the install script or install manually.
+ Next extract the h19term-install.tar.gz to either your home directory or 
+ alternatively any directory you like.  You can delete the files after so an 
+ temporary folder maybe be best.
  
- NOTE: You MUST run H19term at least once to create an initial .h19termrc file.
- 
- You should end up with the following files from the tar ball:
-   h19-readme.txt
-   h19-keys.odt
-   ascii.txt
-   beep1.wav
-   h19term
-   h19term.py
-   h19term.xpm
-   h19term.desktop
-   h19term-raspi-install.sh
+  You should end up with the following files from the tar ball:
+   h19term-distribution.tar.gz
    install.sh
-   cpm-help.txt
-   H19term16x32.psfu.gz
-   H19term14x28.psfu.gz
-   H19term12x24.psfu.gz
-   H19term10x20.psfu.gz
-   Heathkit-H19-bitmap.otb
+   INSTALLATION.txt
+   README.md
+   uninstall.sh
+
 
 Run the Install
 ---------------
@@ -76,12 +33,22 @@ Open a terminal in the folder where you unzipped the files and type
 "sudo ./install.sh" at the prompt, or you can become the "root" user and 
 run it.
 
+
 Setup Terminal
 --------------------
-I use Gnome Terminal and setup an H8 profile for it.  XFCE Terminal doesn't 
-seem to allow profiles, too bad.  KDE console does I believe.
 
-You can edit the /usr/local/bin/h19term file to change your terminal.
+********************************************************************
+**
+**  MUST READ IMPORTANT!!!!
+**  MANDATORY STEP.
+**
+********************************************************************
+
+YOU MUST setup an H8 profile for your terminal.  I use Gnome-Terminal but 
+you may use Mate-Terminal, KDE Konsole or XFCE Terminal.  XFCE4-Terminal
+doesn't allow profiles, too bad.
+
+Go to the Preferences in your terminal of choice and add an "H8" profile.
 
 Set these things in your profile or terminal:
  Size:      - Must be 82x31 at least, larger looks odd but it will work.
@@ -89,11 +56,16 @@ Set these things in your profile or terminal:
  Backspace: - Set Backspace to generate Control-H
  Delete:    - Set Delete key to generate ASCII DEL
  
- 
 Run the program from a terminal by typing:
  
  $ h19term<enter>
  
+NOTE: You MUST run H19term at least once to create an initial .h19termrc
+       file.
+ 
+You can edit the /usr/local/bin/h19term file to change your terminal
+at a later date if you like.
+
 You should be able to find H19term in your desktop menus or search 
 for it by hitting the "Super" or "Windows" key and typing h19.
 

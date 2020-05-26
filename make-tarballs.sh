@@ -16,7 +16,6 @@ cp -v h19term h19term-src
 cp -v h19term.py h19term-src
 cp -v h19term.xpm h19term-src
 cp -v h19term.desktop h19term-src
-cp -v h19term-raspi-install.sh h19term-src
 cp -v install.sh h19term-src
 cp -v uninstall.sh h19term-src
 cp -v cpm-help.txt h19term-src
@@ -34,7 +33,7 @@ find . -maxdepth 1 -name '*' -printf '%P\0' \
 | tar --null -C '.' --files-from=- -czf '../h19term-distribution.tar.gz'
 
 cd ..
-tar cvzf h19term-install.tar.gz h19term-distribution.tar.gz install.sh uninstall.sh INSTALLATION.txt README.md h19term-raspi-install.sh
+tar cvzf h19term-install.tar.gz h19term-distribution.tar.gz install.sh uninstall.sh INSTALLATION.txt README.md
 
 rm -rf h19term-src
 

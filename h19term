@@ -10,13 +10,13 @@ TERMINAL=1
 case "$TERMINAL" in
     1)
         if [ -f "/usr/bin/gnome-terminal" ]; then
-            gnome-terminal --profile H8 -t H19term -- /usr/local/bin/h19term.py
+            gnome-terminal --profile H8 -t H19term --geometry=82x31 -- /usr/local/bin/h19term.py
             exit
         fi
         ;;    
     2)
         if [ -f "/usr/bin/mate-terminal" ]; then
-            mate-terminal --profile H8 -t H19term -- /usr/local/bin/h19term.py
+            mate-terminal --profile H8 -t H19term --geometry=82x31 -- /usr/local/bin/h19term.py
             exit    
         fi
         ;;    
