@@ -7,11 +7,9 @@
  I have found  this to be installed on all Linux distributions to date so you 
  shouldn't have to install it. 
  
- I have tried to keep the requirements to a minimum so the only other package
- you should require is the PySerial module. Please note that as of the release 
- of Python 3.x there are now packages specific to the Python version, make 
- sure you install the correct one.
- 
+ I have tried to keep the requirements to a minimum and the install.sh script
+ should install all dependencies. 
+
  
  Untar H19term
  --------------
@@ -30,8 +28,7 @@
 Run the Install
 ---------------
 Open a terminal in the folder where you unzipped the files and type 
-"sudo ./install.sh" at the prompt, or you can become the "root" user and 
-run it.
+"sudo ./install.sh" at the prompt.
 
 
 Setup Terminal
@@ -68,6 +65,27 @@ at a later date if you like.
 
 You should be able to find H19term in your desktop menus or search 
 for it by hitting the "Super" or "Windows" key and typing h19.
+
+If you experience trouble, open a terminal of at least 82x31 characters 
+in size and type: /usr/local/bin/h19term.py.  This should display any
+error messages without the window going away.
+
+
+Serial Port Permissions
+-----------------------
+
+You must be a member of the proper group to read and write to a serial 
+Port under Linux.  Debian/Ubuntu/Mint use the DIALOUT group and 
+Arch/Manjaro uses the UUCP group.
+
+The install.sh script should have added you to the DIALOUT group or 
+UUCP group depending on whether you run Debian/Ubuntu/Mint based 
+Linux or Arch/Manjaro Linux.  You may have to REBOOT for this to take 
+effect.
+
+You will, at the very least, have to logout and login again.
+If you run the "groups" command and DO NOT see your group, then
+you will have to reboot.
 
 Enjoy.
 

@@ -135,26 +135,42 @@ elif ( cat /proc/version | grep -i ubuntu >/dev/null ) ; then
 fi
 
 if [ $OS == "Debian" ]; then
+    echo
+    echo
     echo "It looks like you are running a Debian/Ubuntu/Mint"
     echo "distribution.  Installing requirements with apt-get..."
     echo
-    apt-get install python3-pyserial
+    sleep 2
+    apt-get install python3-serial
     apt-get install python3-pip
     apt-get install python3-dev
     apt-get install python3-setuptools
+    apt-get install python3-pyaudio
     pip3 install pysinewave
-    pip3 install pyaudio
+    echo
+    echo "Adding you to the \"DIALOUT\" group"
+    echo
+    usermod -a -G dialout $SUDO_USER
+    sleep .5
 elif [ $OS == "arch" ]; then
+    echo
+    echo
     echo "It looks like you are running an Arch based distribution."
     echo "Installing requirements with pacman..."
     echo
+    sleep 2
     pacman -S python-pyserial
     pacman -S python-pip
     pacman -S python-setuptools
+    pacman -S python-pyaudio
     pip3 install pysinewave
-    pip3 install pyaudio
+    echo "Adding you to the \"UUCP\" group"
+    echo
+    usermod -a -G uucp $SUDO_USER
+    sleep .5
 fi
 
+echo
 echo 
 echo "Making directories under /usr/local/share..."
 mkdir -pv /usr/local/share/applications
@@ -162,31 +178,34 @@ mkdir -pv /usr/local/share/h19term
 mkdir -pv /usr/local/share/icons
 mkdir -pv /usr/local/share/fonts
 # I put sleeps in here just for human comfort:-)        
-sleep .5
+sleep 1
 echo
 echo "Changing to /usr/local/share/h19term..."
 mwd=`pwd`
 cd /usr/local/share/h19term
-sleep .2
+sleep .5
 echo "Untaring H19term files..."
 tar xvzf $mwd/h19term-distribution.tar.gz
-sleep .2        
+sleep .5        
 echo "Copying Python and resource files..."
-sleep .1
+sleep .2
 cp -v h19term.desktop /usr/local/share/applications
-sleep .1
+sleep .2
 cp -v h19term /usr/local/bin
-sleep .1
+sleep .2
 cp -v h19term.py /usr/local/bin
-sleep .1
+sleep .2
 cp -v h19term.xpm /usr/local/share/icons
-sleep .1
+sleep .2
 cp -v Heathkit-H19-bitmap.otb /usr/local/share/fonts
 cp -v Heathkit-H19.otf /usr/local/share/fonts
-sleep .2
+sleep .5
+echo
 echo "Making sure h19term and h19term.py are executable..."
 chmod +x /usr/local/bin/h19term
 chmod +x /usr/local/bin/h19term.py
+
+echo
 echo
 echo "We now need to select a default terminal when running under a"
 echo "Linux Graphical Desktop."
@@ -241,14 +260,29 @@ sed -i "s/TERMINAL=[1234]/TERMINAL=$MYTERM/g" /usr/local/bin/h19term
 echo
 
 
-echo "[ FINISHED... ]"
+echo "FINISHED..."
+echo
+echo "[ ***** IMPORTANT NOTES PLEASE READ ***** ]"
+echo
+echo "You MUST setup an H8 profile in your terminal BEFORE you run h19term"
+echo "See the INSTALLAION.txt file for more info."
 echo
 echo "Upon first run h19term will ask which serial port to use and"
 echo "setup some other configuration options which it writes into a "
 echo "~/.h19termrc file."
 echo
 echo "It will only do this on first run."
-echo "run H19term from your desktop menus or search or type \"h19term\""
+echo "run H19term from your desktop menus or search, or type \"h19term\""
 echo "from gnome-terminal or similar."
 echo
+echo "You have been added the DIALOUT group or the UUCP group depending"
+echo "on whether you run Debian/Ubuntu/Mint based Linux or Arch/Manjaro"
+echo "based Linux.  You may have to REBOOT for this to take effect but"
+echo "you will, at the very least, have to logout and login again"
+echo "If you run the \"groups\" command and DO NOT see your group, then"
+echo "you will have to reboot."
+echo
+echo "If you are having trouble with a terminal popping up and disappearing"
+echo "something is not set correctly, try running /usr/local/bin/h19term.py"
+echo "and checking the error."
     
