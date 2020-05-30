@@ -66,6 +66,7 @@ RPI=NO
 # Detects ARM (Raspberry Pi) devices, and sets a flag for later use
 if (cat /proc/cpuinfo | grep ARM >/dev/null) ; then
   RPI=YES
+  OS=Debian
 fi
 
 if [ $RPI == "YES" ]; then
@@ -134,7 +135,7 @@ elif ( cat /proc/version | grep -i ubuntu >/dev/null ) ; then
   OS=Debian  
 fi
 
-if [ $OS == "Debian" ]; then
+if [ $OS = "Debian" ]; then
     echo
     echo
     echo "It looks like you are running a Debian/Ubuntu/Mint"
@@ -152,7 +153,7 @@ if [ $OS == "Debian" ]; then
     echo
     usermod -a -G dialout $SUDO_USER
     sleep .5
-elif [ $OS == "arch" ]; then
+elif [ $OS = "arch" ]; then
     echo
     echo
     echo "It looks like you are running an Arch based distribution."

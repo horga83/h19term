@@ -72,6 +72,8 @@
 # May 02, 2020   V2.1  Added Heathkit-H19-bitmap font for desktop use.
 #                      Many fixes.
 # May 16, 2020   V2.2  Added Xmodem support.
+# May 30, 2020   V2.3  Fix window sizes on Raspberry pi/ Linux console
+#                      and only use 16x32 font.
 
 import os
 import re
@@ -102,7 +104,7 @@ BAUD_RATE = 9600
 # home directory.  All the help files etc live here.
 INSTALL_PATH = '/usr/local/share/h19term/'
 
-PRELOAD_FONT = False
+PRELOAD_FONT = True
 FONT = 'H19term16x32.psfu.gz'  # This font works on Raspberry Pi
 BEEP = 'beep1.wav'
 
@@ -132,8 +134,8 @@ DEFAULT_COLOUR = 0
 
 # ************  END OF USER MODIFIABLE SETTINGS *****************************
 
-VERSION = 'V2.1 - Python 3'
-VERSION_DATE = 'May 02, 2020'
+VERSION = 'V2.3 - Python 3'
+VERSION_DATE = 'May 30, 2020'
 
 CONFIG_FILE = os.path.join(os.environ['HOME'], '.h19termrc')
 LOG_FILE = os.path.join(os.environ['HOME'], 'h19term.log')
@@ -764,9 +766,22 @@ class H19Term(H19Keys, H19Screen):
             g = int(int(LC_RED[2:4],16) * 3.92)
             b = int(int(LC_RED[4:6],16) * 3.92)
             curses.init_color(curses.COLOR_RED,r,g,b)
+
+            self.X0 = 0
+            self.Y0 = 0
         else:
+            self.X0 = 1
+            self.Y0 = 1
             self.cur.box()
             self.cur.refresh()
+            y, x = self.cur.getmaxyx()
+            if y < 31 or x < 82:
+                curses.endwin()
+                print("\nYour screen is to small to run h19term, it must be")
+                print("at least 31 lines by 82 columns...\n")
+                print("Consider changing your terminal profile so you do not have")
+                print("to change this all the time...\n")
+                sys.exit(1)
 
         curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
@@ -777,22 +792,14 @@ class H19Term(H19Keys, H19Screen):
         curses.init_pair(7, curses.COLOR_RED, curses.COLOR_BLACK)
 
 
-        y, x = self.cur.getmaxyx()
-        if y < 31 or x < 82:
-            curses.endwin()
-            print("\nYour screen is to small to run h19term, it must be")
-            print("at least 31 lines by 82 columns...\n")
-            print("Consider changing your terminal profile so you do not have")
-            print("to change this all the time...\n")
-            sys.exit(1)
         #curses.resize_term(31,82)
         curses.cbreak()
         curses.raw()
         curses.noecho()
         curses.nonl()
         self.cur.refresh()
-        self.screen = curses.newwin(25,80,1,1)
-        self.status = curses.newwin(4,80,26,1)
+        self.screen = curses.newwin(25,80,self.X0, self.Y0)
+        self.status = curses.newwin(4,80,26,self.Y0)
         self.screen.attrset(curses.color_pair(1))
         self.status.attrset(curses.color_pair(1))
         self.set_colour(DEFAULT_COLOUR)     # set our default colour
@@ -1805,7 +1812,7 @@ class H19Term(H19Keys, H19Screen):
         inkey=0
         self.screen.nodelay(0)
         while inkey != 'q':
-            pad.refresh(y,x,1,1,wy-1,wx)
+            pad.refresh(y,x,self.X0,self.Y0,wy-1,wx)
             inkey = self.screen.getkey()
 
             if inkey=='KEY_UP':y=max(y-1,0)

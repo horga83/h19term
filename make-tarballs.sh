@@ -17,12 +17,8 @@ cp -v h19term.py h19term-src
 cp -v h19term.xpm h19term-src
 cp -v h19term.desktop h19term-src
 cp -v install.sh h19term-src
-cp -v uninstall.sh h19term-src
 cp -v cpm-help.txt h19term-src
 cp -v H19term16x32.psfu.gz h19term-src
-cp -v H19term14x28.psfu.gz h19term-src
-cp -v H19term12x24.psfu.gz h19term-src
-cp -v H19term10x20.psfu.gz h19term-src
 cp -v Heathkit-H19-bitmap.otb h19term-src
 cp -v Heathkit-H19.otf h19term-src
 cp -v INSTALLATION.txt h19term-src
@@ -33,7 +29,7 @@ find . -maxdepth 1 -name '*' -printf '%P\0' \
 | tar --null -C '.' --files-from=- -czf '../h19term-distribution.tar.gz'
 
 cd ..
-tar cvzf h19term-install.tar.gz h19term-distribution.tar.gz install.sh uninstall.sh INSTALLATION.txt README.md
+tar cvzf h19term-install.tar.gz h19term-distribution.tar.gz install.sh INSTALLATION.txt README.md
 
 rm -rf h19term-src
 
