@@ -43,6 +43,8 @@
  
  [Readme](https://github.com/horga83/h19term/blob/master/h19-readme.txt)
  
+ Run make-tarballs.sh to create the installation tar files.
+ 
  [Installation](https://github.com/horga83/h19term/blob/master/INSTALLATION.txt)
  
 ![](h19term.png?raw=true)
