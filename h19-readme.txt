@@ -27,11 +27,10 @@
      Customizing colours
      X11 GUI applications
      Linux console
- INSTALLATION
-     Install PySerial
-     Untar H19term
-     Make it executable
-     Configuration
+ XMODEM SUPPORT
+     Using Xmodem send
+     H8/H89 and RX.COM
+     .h19termrc configuration
  RASPBERRY PI
      Serial Port
  OTHER INFO
@@ -57,6 +56,8 @@
  Help files available for ascii characters, CP/M quick help and user manual.
  Easily configurable in .h19termrc file
  Colour changing mode for Amber and Green or other colours.
+ Xmodem send.
+ RX.COM - H8/H89 companion Xmodem application
  Help files directly inside h19term.
   Ascii table
   User Manual
@@ -73,8 +74,7 @@
  Add memory and I/O maps
  Maybe some Super 19 features if anyone desires them.
  Embed Z80 emulator.
- Zmodem support
- 
+  
  
  USAGE
  ---------------------------------------------------------------------------
@@ -125,6 +125,7 @@
  Ctrl-A Q   CP/M Quick Help
  Ctrl-A P   Select serial port and baud rate
  Ctrl-A R   Reset the terminal to power up mode
+ Ctrl-A S   Send file via Xmodem
  Ctrl-A X   Exit h19term
  Ctrl-A Z   Help screen
  Ctrl-A Ctrl-A   Send a CTRL-A through to application.
@@ -170,6 +171,7 @@
  Setting custom colours is different depending on whether you are running on
  the Linux console or under an X11 application.
  
+
  X11 GUI applications
  --------------------
  For X11 applications you must adjust the palette in your terminal 
@@ -210,93 +212,91 @@
  red = AA0000
 
  Once you have set your colours you can use CTRL-A C to set them.
-  
+
+
+ XMODEM SUPPORT
+ ---------------------------------------------------------------------------
+ As of version 2.4 of H19term, XMODEM send support has been included.
+
+ Along with XMODEM support I have included a CP/M companion application 
+ called RX.COM, which you can put on your H8 or H89.  RX.COM is an XMODEM
+ receive command, but is not actually necessary, you can use ZMP or MAPLE
+ if you like.  I get faster transfer speeds with RX.COM, 9600baud at 2MHz
+ and 19200 at 4MHz.
+
+ You must use RX.COM for the AUTORUN feature decribed below.
+
+ AUTORUN
+ -------
+ AUTORUN is a feature that will automatically enter the RX command on the 
+ H8 or H89 so you don't need to start it running first.  Sending a file 
+ is as simple as hitting Ctrl-A S without worrying about running a receive
+ program on the H8 first.
+
+ How it works
+ ------------
+ - Hit Ctrl-A S  -  A popup for selecting file will appear.
+ - Select your file and hit CR.
+ - A popup (depending on setting in your ~/.h19termrc) will appear, allowing
+   you to hit CR, A or Q to abort.
+ - CR  Starts the transfer but you MUST have started a receive program on 
+       your H8 first. (RX, ZMP, MAPLE etc).
+   A   Will start the transfer but automatically starts RX on the H8.
+   Q   Will abort the transfer.
+   
+ Defaults can be set in ~/.h19termrc see the section below.
+
+ NOTE:  In AUTORUN mode if the file you are sending already exists on the H8,
+        RX will automatically rename the file to <filename.RX>
  
+ .h19termrc configuration
+ ------------------------
+ In your .h19termrc file you can set one of 3 modes to deal with XMODEM 
+ transfers, USER, AUTO or ANY.  The entry in the .h19termrc file is as 
+ follows, USER is the default:
+
+ [AutoRun]
+ autorunmode = USER
+
+ USER  - This setting will popup a dialog asking you to hit CR, A or Q
+         which is described above.
+ AUTO  - This setting will immediately run "RX -n <filename" on the H8
+         and start the transfer immediately after entering the filename.
+ ANY   - This is similar to USER but will not give you the "A" option.
+
+ If you use ZMP or Maple or some other program on the H8 for XMODEM 
+ transfers, you should set "autorunmode=ANY".
+
+
  INSTALLATION
  ---------------------------------------------------------------------------
  H19term is written in Python and currently uses version 3.6 or greater.  
- I have found  this to be installed on all Linux distributions to date so you 
+ I have found this to be installed on all Linux distributions to date so you 
  shouldn't have to install it. 
  
- I have tried to keep the requirements to a minimum so the only other package
- you should require is the PySerial module. Please note that as of the release 
- of Python 3.x there are now packages specific to the Python version, make 
- sure you install the correct one.
+ Please consult the INSTALLATION.txt file that comes with H19term.   
  
- 
- Raspberry Pi Installs:
- --------------------------
- If you are running on a RASPBERRY PI you MUST run the 
- h19term-raspi-install.sh script instead.
 
-  
- Desktop Linux Installs:
- --------------------------
- 
- Install PySerial
- ----------------
- Raspbian, Debian, Ubuntu and Mint users can easily install this with the 
- following command:
-   sudo apt-get install python3-serial
+ Setup Terminal
+ --------------------
+ YOU MUST setup an H8 profile for your terminal.  I use Gnome-Terminal but 
+ you may use Mate-Terminal, KDE Konsole or XFCE Terminal.  XFCE4-Terminal
+ doesn't allow profiles, too bad.
 
- Arch and Manjaro users install with:
-   sudo pacman -S python-pyserial
- 
- Fedora and other RPM distros seach for pyserial.
- 
- Unzip H19term
- --------------
- Next untar h19term-install.tar.gz to either your home directory or alternatively 
- any directory you like. If you want to install it somewhere other than 
- /usr/local/, you will need to adjust the "installpath" setting in your 
- .h19termrc file and edit the install script or install manually.
- 
- NOTE: You MUST run H19term at least once to create an initial .h19termrc file.
- 
- You should end up with the following files from the tar ball:
-   h19-readme.txt
-   h19-keys.odt
-   ascii.txt
-   beep1.wav
-   h19term
-   h19term.py
-   h19term.xpm
-   h19term.desktop
-   h19term-raspi-install.sh
-   install.sh
-   cpm-help.txt
-   H19term16x32.psfu.gz
-   H19term14x28.psfu.gz
-   H19term12x24.psfu.gz
-   H19term10x20.psfu.gz
-   Heathkit-H19-bitmap.otb
+ Go to the Preferences in your terminal of choice and add an "H8" profile.
 
-
-Run the Install
----------------
-Open a terminal in the folder where you unzipped the files and type 
-"sudo ./install.sh" at the prompt, or you can become the "root" user and 
-run it.
-
-Setup Terminal
---------------------
-I use Gnome Terminal and setup an H8 profile for it.  XFCE Terminal doesn't 
-seem to allow profiles, too bad.  KDE console does I believe.
-
-You can edit the /usr/local/bin/h19term file to change your terminal.
-
-Set these things in your profile or terminal:
- Size:      - Must be 82x31 at least, larger looks odd but it will work.
- Font:      - Set the font to Heathkit-H19-bitmap
- Backspace: - Set Backspace to generate Control-H
- Delete:    - Set Delete key to generate ASCII DEL
+ Set these things in your profile or terminal:
+   Size:      - Must be 82x31 at least, larger looks odd but it will work.
+   Font:      - Set the font to Heathkit-H19-bitmap or Heathkit-H19.
+   Backspace: - Set Backspace to generate Control-H
+   Delete:    - Set Delete key to generate ASCII DEL
  
-Run the program from a terminal by typing:
+ Run the program from a terminal by typing:
  
  $ h19term<enter>
  
-You should be able to find H19term in your desktop menus or search 
-for it by hitting the "Super" or "Windows" key and typing h19.
+ You should be able to find H19term in your desktop menus or search 
+ for it by hitting the "Super" or "Windows" key and typing h19.
  
  
  Configuration
@@ -307,11 +307,15 @@ for it by hitting the "Super" or "Windows" key and typing h19.
  ------------------------ .h19termrc---------------------------
  [General]
  soundfile = beep1.wav
- installpath = /usr/local/share/h19term
-
+ 
  [SerialComms]
  port = /dev/ttyS1
  baudrate = 9600
+ xmodemport = /dev/ttyS2
+ xmodembaudrate = 19200
+
+ [AutoRun]
+ autorunmode = USER
 
  [Fonts]
  preload = False
@@ -338,13 +342,15 @@ for it by hitting the "Super" or "Windows" key and typing h19.
 
  ------------------------ end of file---------------------------
  
- soundpath    - The sound file for the terminal beep
- installpath  - Where h19term.py will look for it's data files, it
-                is set to /usr/local/share/h19term by default.
+ soundfile    - The sound file for the terminal beep
  
  port         - The serial port to use
  baudrate     - Speed of the serial link
- 
+ xmodemport   - The serial port for xmodem transfers
+ xmodembaudrate - The baud rate for xmodem
+
+ autorunmode  - Transfer mode for xmodem 
+
  preload      - Whether h19term will attempt to preload the font file
  font         - The font file to preload for the Linux console.
  
@@ -376,7 +382,7 @@ for it by hitting the "Super" or "Windows" key and typing h19.
  
  ************************************************************************ 
   
- You must have a terminal that is at least 80x27 in size.  In Gnome-terminal
+ You must have a terminal that is at least 82x31 in size.  In Gnome-terminal
  you can preset this in the profile preferences or just resize it manually.
   
  
@@ -385,13 +391,11 @@ for it by hitting the "Super" or "Windows" key and typing h19.
  The Raspberry Pi board running under Raspbian sets the terminal to 60x160,
  60 lines by 160 columns.  While this is fine it is better to have the 
  terminal run with a larger font so it fills the screen.  We do this by 
- re-configuring the console.  Login and run the following:
+ re-configuring the console.
 
- NOTE:!!!  
- --------
- As of version 1.4, I have now included a font file for the Raspberry
- Pi console.  You can load it before you run H19term by issuing the 
- setfont command:  "sudo setfont H19term16x32.psfu.gz"
+ Login and run the following:
+   "sudo setfont H19term16x32.psfu.gz"
+ You can load it before you run H19term by issuing the setfont command:  
  
  You can set H19term to preload the font automatically if you set it in the
  .h19termrc configuration file.  You will need to load it with 
@@ -400,30 +404,26 @@ for it by hitting the "Super" or "Windows" key and typing h19.
  This font file has all the correct H19 graphics characters which are not
  part of the normal Terminus font.
  
- If you use the custom font you should not have to run the dpkg-reconfigure 
- command as listed below.  If you do run the setup below, you will be
- missing some H19 graphics characters.
-           
- sudo dpkg-reconfigure console-setup
- 
- Leave the encoding on UTF-8
- Character set can be "Guess optimal character set"
- Select "Terminus" font
- Select 16x32 (framebuffer only)
- 
- This will set your console to 32 by 80
- 
  Now restart your Pi board:  "sudo shutdown -r now"
  
- Serial Port
+
+ SERIAL PORT
  -----------
  You will require a USB or other serial port.
  
- I actually mounted my Pi board to the back of the LCD monitor with strong 
- double sided tape so I only have a keyboard and monitor on the desk.
- 
- You do not require the Pi to be plugged into the network after the correct
- packages have been installed.
+ You must be a member of the proper group to read and write to a serial 
+ Port under Linux.  Debian/Ubuntu/Mint use the DIALOUT group and 
+ Arch/Manjaro uses the UUCP group.
+
+ The install.sh script should have added you to the DIALOUT group or 
+ UUCP group depending on whether you run Debian/Ubuntu/Mint based 
+ Linux or Arch/Manjaro Linux.  You may have to REBOOT for this to take 
+ effect.
+
+ You will, at the very least, have to logout and login again.
+ If you run the "groups" command and DO NOT see your group, then
+ you will have to reboot.
+
  
  In order for the speaker to beep you will need to plug one into the Pi
  audio jack.
@@ -434,9 +434,9 @@ for it by hitting the "Super" or "Windows" key and typing h19.
  If you have questions, bug reports, patches or feature requests please 
  email me at farrisg@gmsys.com
  
- If you just want to buy me a coffee or beer then I live on Vancouver 
- Island, British Columbia, Canada and am always available:-)  Please come 
- and visit.
+ If you would like to buy me a coffee, beer or just say hello, I live on 
+ Vancouver Island, British Columbia, Canada and am always available:-)  
+ Please come and visit.
  
  
  

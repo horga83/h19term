@@ -16,7 +16,7 @@
  H19term aims to provide close to 100 percent software emulation of the
  Heathkit H19, also known as Zenith Z19, hardware video terminal. 
 
- **Latest version V2.1**
+ **Latest version V2.4**
 
  It currently has the following features:
  
@@ -31,6 +31,7 @@
    - Selectable serial ports and baud rates
    - Easily configurable in .h19termrc file
    - Colour changing mode for Amber and Green or other colours.
+   - Xmodem transfer with H8/H89 companion app (RX.COM)
    - Help files directly inside h19term.
      - Ascii table
      - User Manual

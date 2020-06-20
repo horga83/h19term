@@ -87,5 +87,14 @@ You will, at the very least, have to logout and login again.
 If you run the "groups" command and DO NOT see your group, then
 you will have to reboot.
 
+
+XMODEM Autorun support
+----------------------
+If you are going to use Autorun copy the RX.COM file to your CP/M machine
+Even if you don't use the Autorun feature, RX.COM is a great xmodem receive
+command.  9600baud on a 2MHz Z80 and 19200 on a 4MHz Z80.
+RX.COM can be found in /usr/local/share/h19term
+
+
 Enjoy.
 

@@ -74,6 +74,7 @@
 # May 16, 2020   V2.2  Added Xmodem support.
 # May 30, 2020   V2.3  Fix window sizes on Raspberry pi/ Linux console
 #                      and only use 16x32 font.
+# Jun 01, 2020   V2.4  Added Xmodem transfer.
 
 import os
 import re
@@ -93,16 +94,32 @@ locale.setlocale(locale.LC_ALL, '')
 code = locale.getpreferredencoding()
 
 
-# ************* USER MODIFIABLE SETTINGS ************************************
+# ************* MODIFIABLE SETTINGS ************************************
 # Do not modify these settings here any more, edit the .h19termrc file instead,
 # you will find it in your home directory.
 
 SERIAL_PORT = '/dev/ttyUSB0'
+XMODEM_PORT = '/dev/ttyUSB1'
 BAUD_RATE = 9600
+XMODEM_RATE = 9600
+
+# Set the autorun mode for xmodem transfers.  Auto run can only be used with the
+# RX.COM companion application that comes with H19term.  The "USER" mode can be
+# used with any xmodem program.
+#
+# Modes are:
+#   USER - User selectable via a popup window, this is the default
+#   AUTO - H19term will automatically run "RX -n <filename> on the CP/M side.
+#   ANY  - Choose this for using ZMP or Maple etc.
+AUTORUN_MODE = "USER"
 
 # This is the root directory for h19term except for .h19termrc which is in your
 # home directory.  All the help files etc live here.
 INSTALL_PATH = '/usr/local/share/h19term/'
+
+# This is a storage area for the remembered path when choosing a file.  It
+# starts as your home dir
+RUN_PATH = os.environ['HOME']
 
 PRELOAD_FONT = True
 FONT = 'H19term16x32.psfu.gz'  # This font works on Raspberry Pi
@@ -134,8 +151,8 @@ DEFAULT_COLOUR = 0
 
 # ************  END OF USER MODIFIABLE SETTINGS *****************************
 
-VERSION = 'V2.3 - Python 3'
-VERSION_DATE = 'May 30, 2020'
+VERSION = 'V2.4 - Python 3'
+VERSION_DATE = 'Jun 01, 2020'
 
 CONFIG_FILE = os.path.join(os.environ['HOME'], '.h19termrc')
 LOG_FILE = os.path.join(os.environ['HOME'], 'h19term.log')
@@ -528,10 +545,10 @@ class H19Term(H19Keys, H19Screen):
         H19Screen.__init__(self, self.screen, self.status)
 
     def get_h19config(self):
-        global SERIAL_PORT, BAUD_RATE, PRELOAD_FONT, FONT, BEEP
-        global AUTO_CPM_DATE, CPM_DATE_FORMAT, CPM_TIME_FORMAT
-        global AUTO_HDOS_DATE, HDOS_DATE_FORMAT, INSTALL_PATH
-        global KEY_REPEAT_RATE, DEFAULT_COLOUR
+        global SERIAL_PORT, XMODEM_PORT, BAUD_RATE, PRELOAD_FONT, FONT, BEEP
+        global AUTO_CPM_DATE, CPM_DATE_FORMAT, CPM_TIME_FORMAT, XMODEM_RATE
+        global AUTO_HDOS_DATE, HDOS_DATE_FORMAT, INSTALL_PATH, AUTORUN_MODE
+        global KEY_REPEAT_RATE, DEFAULT_COLOUR, RUN_PATH
         global LC_WHITE, LC_GREEN, LC_YELLOW
         global LC_BLUE, LC_CYAN, LC_MAGENTA, LC_RED
         Config = configparser.ConfigParser(allow_no_value = True)
@@ -543,9 +560,9 @@ class H19Term(H19Keys, H19Screen):
 
             try:
                 Config.read(CONFIG_FILE)
-                #if Config.has_option('General', 'installpath'):
-                #    INSTALL_PATH = Config.get('General', 'installpath')
-                #else: updateFile = True
+                if Config.has_option('General', 'RunPath'):
+                    RUN_PATH = Config.get('General', 'RunPath')
+                else: updateFile = True
                 if Config.has_option('General','KeyRepeatRate'):
                     KEY_REPEAT_RATE = Config.getfloat('General','KeyRepeatRate')
                 else: updateFile = True
@@ -558,6 +575,17 @@ class H19Term(H19Keys, H19Screen):
                 else: updateFile = True
                 if Config.has_option('SerialComms', 'baudRate'):
                     BAUD_RATE = Config.getint('SerialComms', 'baudRate')
+                else: updateFile = True
+
+                if Config.has_option('SerialComms', 'xmodemport'):
+                    XMODEM_PORT = Config.get('SerialComms', 'xmodemport')
+                else: updateFile = True
+                if Config.has_option('SerialComms', 'xmodembaudrate'):
+                    XMODEM_RATE = Config.getint('SerialComms', 'xmodembaudrate')
+                else: updateFile = True
+
+                if Config.has_option('AutoRun', 'autorunmode'):
+                    AUTORUN_MODE = Config.get('AutoRun', 'autorunmode')
                 else: updateFile = True
 
                 if Config.has_option('Fonts','Preload'):
@@ -645,6 +673,7 @@ class H19Term(H19Keys, H19Screen):
 
             print("\n   Please select one of these, or press <Enter> if you would")
             print("   like to enter your own by editing your ~/.h19termrc configuration file.")
+            print("\n   Python doesn't always find all available ports on your computer.")
             print("   A default baud rate of 9600 will be choosen.\n")
 
             portno = input("Enter number: ")
@@ -683,15 +712,21 @@ class H19Term(H19Keys, H19Screen):
         # add the settings to the structure of the file, and lets write it out...
         Config.add_section('General')
         Config.add_section('SerialComms')
+        Config.add_section('AutoRun')
         Config.add_section('Fonts')
         Config.add_section('Colours')
         Config.add_section('Date')
         Config.set('General','SoundFile', BEEP)
-        #Config.set('General','InstallPath', INSTALL_PATH)
+        Config.set('General','RunPath', str(RUN_PATH))
         Config.set('General','# Use caution when increasing repeat rate to avoid overruns')
         Config.set('General','KeyRepeatRate', str(KEY_REPEAT_RATE))
         Config.set('SerialComms','Port', SERIAL_PORT)
         Config.set('SerialComms','BaudRate', str(BAUD_RATE))
+        Config.set('SerialComms','XmodemPort', XMODEM_PORT)
+        Config.set('SerialComms','XmodemBaudRate', str(XMODEM_RATE))
+
+        Config.set('AutoRun', 'AutoRunMode', str(AUTORUN_MODE))
+
         Config.set('Fonts','Preload',str(PRELOAD_FONT))
         Config.set('Fonts','Font',FONT)
 
@@ -837,8 +872,6 @@ class H19Term(H19Keys, H19Screen):
         self.linesSinceBoot = 0 # used to auto set date
         self.clear_display(True)
         self.cursor_home()
-        curses.curs_set(CURSOR_NORMAL)
-
 
     def terminate(self):
         curses.endwin() # End screen (ready to draw new one, but instead we exit)
@@ -1355,6 +1388,10 @@ class H19Term(H19Keys, H19Screen):
         DEFAULT_COLOUR = idx
         self.write_h19config()
 
+    def background_clear(self):
+        bkgd = curses.newwin(24, 80, 1, 1)
+        bkgd.refresh()
+
     def popup_colour(self):
         cl = []
         cl.append('Select White  ')
@@ -1365,8 +1402,8 @@ class H19Term(H19Keys, H19Screen):
         cl.append('Select Magenta')
         cl.append('Select Red    ')
         try:
+            self.background_clear()
             popup = curses.newwin(12, 32, 8, 20)
-            popup.attrset(curses.color_pair(1))
             for i in range(len(cl)):
                 popup.addstr(i+2, 9, cl[i],curses.color_pair(i+1))
                 popup.addstr(10, 2, "<Enter> to select, 'q' quits")
@@ -1402,18 +1439,19 @@ class H19Term(H19Keys, H19Screen):
                 self.set_colour(idx)
                 self.screen.touchwin()
                 self.screen.refresh()
-                curses.curs_set(1)
+                curses.curs_set(CURSOR_NORMAL)
                 return
 
             elif chr(c) == 'q':
                 self.screen.touchwin()
                 self.screen.refresh()
-                curses.curs_set(1)
+                curses.curs_set(CURSOR_NORMAL)
                 return
 
 
     def popup_error(self, text):
         try:
+            self.background_clear()
             popup = curses.newwin(6, 49, 10, 20)
             x = (49 - len(text)) / 2
             popup.addstr(2, x, text)
@@ -1448,11 +1486,13 @@ class H19Term(H19Keys, H19Screen):
     H19 DEL Key....................D  |  ERASE.....F11
     CP/M Quick Help................Q  |  OFFLINE...F12
     Set H19term colours............C  |
-    Set Baud Rate..................P  |
+    Set Baud Rate and Port.........P  |
+    Send file by XMODEM............S  |
                                       
     Press command key or <Enter> to close help.
         """
         try:
+            self.background_clear()
             popup = curses.newwin(22, 64, 2, 6)
             popup.addstr(1, 1, helptext)
             popup.border('|','|','-','-','+','+','+','+')
@@ -1554,113 +1594,217 @@ class H19Term(H19Keys, H19Screen):
                 curses.curs_set(CURSOR_INVISIBLE)
                 self.show_intro(scn)
                 self.firstChar = True
+                curses.curs_set(CURSOR_NORMAL)
                 break
             elif s == 's' or s == 'S':  # Reset terminal
-                self.xmodem_send()
-
+                self.xmodem_send(sio)
+                break
             elif s == 'z' or s == 'Z':
                 s = self.popup_help()
 
             else:
                 break  # get out on ^M or any non command key
 
-    def popup_filename(self):
-#         cl = os.listdir('.')
-        try:
-            popup = curses.newwin(5, 58, 10, 10)
-            popup.attrset(curses.color_pair(0))
-            #popup.addstr(0,2, "Current directory is: [ ")
-            #popup.addstr(os.getcwd())
-            #popup.addstr(" ]")
+    def popup_autorun(self, mode):
+        self.background_clear()
+        popup = curses.newwin(12, 65, 8, 8)
+        popup.attrset(curses.color_pair(0))
+        popup.border('|', '|', '-', '-', '+', '+', '+', '+')
+        popup.addstr(2, 2, "Press ")
+        popup.addstr("CR ", curses.A_BOLD)
+        popup.addstr("to run, ")
+        if mode == 'USER':
+            popup.addstr("A", curses.A_BOLD)
+            popup.addstr(" to send with Autorun, ")
+        popup.addstr("Q", curses.A_BOLD)
+        popup.addstr(" to abort")
 
-#
-#             for i in range(len(cl)):
-#                 popup.addstr(i + 3, 2, cl[i], curses.color_pair(0))
-#                 popup.addstr(23, 2, "<Enter> to select, 'q' quits")
+        if mode == 'USER':
+            popup.addstr(4, 2, "Autorun", curses.A_BOLD)
+            popup.addstr(4, 9, " is a feature that will automatically enter the")
+            popup.addstr(5, 2, "RX command on the H8, otherwise make sure RX is running first.")
+            popup.addstr(7, 2, "NOTE: The file will be automatically renamed to filename.RX,")
+            popup.addstr(8, 2, "if it already exists...")
+            popup.addstr(10, 2, "Defaults can be set in ~/.h19termrc.  See the manual page.")
+        else:
+            popup.addstr(4, 2, "Your Xmodem receive program on the H8/H89, should have been")
+            popup.addstr(5, 2, "started first, it not abort with the \"Q\" key...")
+
+        c = popup.getch()
+        self.screen.touchwin()
+        self.screen.refresh()
+        return c
+
+    def popup_filename(self):
+        global RUN_PATH
+        filename = ""
+        show_hidden = False
+        cl = []
+        psub = None
+        xpos = 1
+        line_len = 75
+
+        os.chdir(RUN_PATH)
+
+        def get_new_dir():
+            psub.clear()
+            if show_hidden:
+                cl = os.listdir('.')
+            else:
+                cl = [n for n in os.listdir('.') if not n.startswith(".")]
+            cl.sort()
+            # process dir
+            for i in range(len(cl)):
+                if os.path.isdir(cl[i]):
+                    cl[i] = '[+]' + cl[i]
+                else:
+                    cl[i] = '   ' + cl[i]
+            # sort dirs first
+            cl.sort(key=lambda x:x[0] != '[')
+            cl.insert(0, "[+]..")
+
+            for i in range(21):
+                if i < len(cl):
+                    psub.addnstr(i, 1, cl[i], line_len, curses.color_pair(0))
+            psub.move(0, 0)
+            psub.addnstr(0, xpos, cl[0], line_len, curses.color_pair(0) | curses.A_REVERSE)
+            psub.refresh()
+            return cl
+
+        try:
+            self.background_clear()
+            popup = curses.newwin(24, 78, 1, 2)
+            popup.attrset(curses.color_pair(0))
             popup.border('|', '|', '-', '-', '+', '+', '+', '+')
             popup.addstr(0, 2, "[ ")
             popup.addstr(os.getcwd())
             popup.addstr(" ]")
-            popup.addstr(2, 2, "File: ")
-            curses.echo()
-            s = popup.getstr().decode(encoding="utf-8")
-            file = os.path.join(os.getcwd(), s)
-#             popup.addstr(0, 3, '[Baud Rate and Port Selection]')
-#             popup.nodelay(0)
-#             popup.keypad(1)
-#             curses.curs_set(0)
+            popup.addstr(23, 9, "[ Press CR to select, \"Q\" to quit, \"H\" to toggle \'.\' files ]")
             popup.refresh()
-            return file
+            psub = popup.subwin(22, 76, 2, 3)
+            psub.attrset(curses.color_pair(0))
+            psub.nodelay(False)
+            psub.keypad(True)
+            psub.scrollok(True)
+            psub.idlok(True)
+            curses.curs_set(CURSOR_INVISIBLE)
+
+            cl = get_new_dir()
+
         except:
             pass
-#
-#         # get the index to place the cursor
-#         idx = 0
-#         popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
-#
-#         while True:
-#             c = popup.getch()
-#             if c == curses.KEY_DOWN:
-#                 if idx == -1:
-#                     popup.addstr(idx + 3, 23, str(SERIAL_PORT)[5:], curses.color_pair(0) | curses.A_NORMAL)
-#                     idx += 1
-#                     popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
-#                 elif idx + 1 < len(cl):
-#                     popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_NORMAL)
-#                     idx += 1
-#                     popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
-#             elif c == curses.KEY_UP:
-#                 if idx == 0:
-#                     popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_NORMAL)
-#                     idx -= 1
-#                     popup.addstr(idx + 3, 23, str(SERIAL_PORT)[5:], curses.color_pair(0) | curses.A_REVERSE)
-#                 elif idx - 1 >= 0:
-#                     popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_NORMAL)
-#                     idx -= 1
-#                     popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
-#                 popup.refresh()
-#
-#             elif curses.keyname(c) == b'^M':
-#                 if idx == -1:
-#                     self.popup_port_select(sio)
-#                 else:
-#                     pass
-# #                    BAUD_RATE = BAUD_RATES[idx]
-# #                    sio.baudrate = BAUD_RATE
-#                 self.show_status_line()
-#                 self.write_h19config()
-#                 self.screen.touchwin()
-#                 self.screen.refresh()
-#                 curses.curs_set(1)
-#                 return
-#
-#             elif chr(c) == 'q':
-#                 self.screen.touchwin()
-#                 self.screen.refresh()
-#                 curses.curs_set(1)
-#                 return
+
+        #     # get the index to place the cursor
+        idx = 0
+        idy = 0
+        psub.addnstr(idy, xpos, cl[idx], line_len, curses.color_pair(0) | curses.A_REVERSE)
+        psub.refresh()
+
+        while True:
+            c = psub.getch()
+            if c == curses.KEY_DOWN:
+                if idy + 1 >= len(cl):
+                    continue
+                if idy + 1 < 21:
+                    psub.addnstr(idy, xpos, cl[idx], line_len, curses.color_pair(0) | curses.A_NORMAL)
+                    idx += 1
+                    idy += 1
+                    psub.addnstr(idy, xpos, cl[idx], line_len, curses.color_pair(0) | curses.A_REVERSE)
+                elif idy + 1 >= 21 and idx + 1 < len(cl):
+                    psub.addnstr(idy, xpos, cl[idx], line_len, curses.color_pair(0) | curses.A_NORMAL)
+                    psub.scroll()
+                    idx += 1
+                    psub.addnstr(idy, xpos, cl[idx], line_len, curses.color_pair(0) | curses.A_REVERSE)
+            elif c == curses.KEY_UP:
+                if idy == 0:
+                    if idx > 0:
+                        psub.move(0,0)
+                        psub.insertln()
+                        psub.insnstr(0, xpos, cl[idx-1], line_len, curses.color_pair(0) | curses.A_REVERSE)
+                        psub.addnstr(1, xpos, cl[idx], line_len, curses.color_pair(0) | curses.A_NORMAL)
+                        idx -= 1
+                elif idy -1 >= 0:
+                    psub.addnstr(idy, xpos, cl[idx], line_len, curses.color_pair(0) | curses.A_NORMAL)
+                    idx -= 1
+                    idy -= 1
+                    psub.addnstr(idy, xpos, cl[idx], line_len, curses.color_pair(0) | curses.A_REVERSE)
+            elif c == curses.KEY_NPAGE:
+                pass
+            elif c == curses.KEY_PPAGE:
+                pass
+            elif curses.keyname(c) == b'^M':
+                if os.path.isdir(cl[idx][3:]) or os.path.isdir(cl[idx][3:]) == '..':
+                    os.chdir(cl[idx][3:])
+                    popup.move(0, 2)
+                    for _ in range(64):
+                        popup.addch('-')
+                    popup.addstr(0, 2, "[ ")
+                    popup.addstr(os.getcwd())
+                    popup.addstr(" ]")
+
+                    RUN_PATH = os.getcwd()
+                    self.write_h19config()
+
+                    cl = get_new_dir()
+
+                    idx = 0
+                    idy = 0
+
+                else:
+                    filename = cl[idx][3:]
+                    self.show_status_line()
+                    self.screen.touchwin()
+                    self.screen.refresh()
+                    curses.curs_set(1)
+                    return filename, popup
+
+            elif chr(c) == 'h' or chr(c) == 'H':
+                show_hidden = not show_hidden
+                cl = get_new_dir()
+                idy = 0
+                idx = 0
+            elif chr(c) == 'q' or chr(c) == 'Q':
+                self.screen.touchwin()
+                self.screen.refresh()
+                curses.curs_set(1)
+                return None, popup
+            popup.refresh()
 
     def popup_baud_rate(self, sio):
-        global BAUD_RATE, BAUD_RATES
+        global BAUD_RATE, BAUD_RATES, XMODEM_RATE, XMODEM_PORT, SERIAL_PORT
+        c_column = 8
+        x_column = 28
+        modified = False
+
         cl = []
-        cl.append('Select   1200')
-        cl.append('Select   2400')
-        cl.append('Select   4800')
-        cl.append('Select   9600')
-        cl.append('Select  19200')
-        cl.append('Select  38400')
-        cl.append('Select  57600')
+        cl.append('   1200  ')
+        cl.append('   2400  ')
+        cl.append('   4800  ')
+        cl.append('   9600  ')
+        cl.append('  19200  ')
+        cl.append('  38400  ')
+        cl.append('  57600  ')
         try:
-            popup = curses.newwin(14, 36, 8, 20)
+            self.background_clear()
+            popup = curses.newwin(15, 45, 5, 15)
             popup.attrset(curses.color_pair(0))
-            popup.addstr(2,4, "Current port is: [ ")
-            popup.addstr(str(SERIAL_PORT)[5:],curses.A_BOLD)
-            popup.addstr(" ]")
+            popup.addstr(2, 6, "Console Port")
+            popup.addstr(3, 6, "[          ]")
+            popup.addstr(3, int((11 - len(str(SERIAL_PORT)))/2+10), str(SERIAL_PORT)[5:], curses.A_BOLD)
+            popup.addstr(2, 26, "Xmodem  Port")
+            popup.addstr(3, 26, "[          ]")
+            popup.addstr(3, int((11 - len(str(XMODEM_PORT)))/2+30), str(XMODEM_PORT)[5:], curses.A_BOLD)
+
+
             for i in range(len(cl)):
-                popup.addstr(i + 4, 9, cl[i], curses.color_pair(0))
-                popup.addstr(12, 2, "<Enter> to select, 'q' quits")
+                popup.addstr(i + 5, 6, '[          ]')
+                popup.addstr(i + 5, c_column, cl[i], curses.color_pair(0))
+                popup.addstr(i + 5, 26, '[          ]')
+                popup.addstr(i + 5, x_column, cl[i], curses.color_pair(0))
+                popup.addstr(13, 7, "<Enter> to select, Q to quit")
+
             popup.border('|', '|', '-', '-', '+', '+', '+', '+')
-            popup.addstr(0, 3, '[Baud Rate and Port Selection]')
+            popup.addstr(0, 7, '[Baud Rate and Port Selection]')
             popup.nodelay(0)
             popup.keypad(1)
             curses.curs_set(0)
@@ -1669,53 +1813,145 @@ class H19Term(H19Keys, H19Screen):
             pass
 
         # get the index to place the cursor
-        idx = BAUD_RATES.index(BAUD_RATE)
-        popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
+        idy = BAUD_RATES.index(XMODEM_RATE)
+        selected_x = idy
+        popup.addstr(idy + 5, x_column, cl[idy], curses.color_pair(0) | curses.A_BOLD)
+        popup.addstr(idy + 5, 35, "*", curses.color_pair(0) | curses.A_BOLD)
+        idy = BAUD_RATES.index(BAUD_RATE)
+        selected_c = idy
+        popup.addstr(idy + 5, c_column, cl[idy], curses.color_pair(0) | curses.A_BOLD | curses.A_REVERSE)
+        popup.addstr(idy + 5, 15, "*", curses.color_pair(0) | curses.A_BOLD | curses.A_REVERSE)
+
+        idx = c_column
+        s_port = SERIAL_PORT
 
         while True:
             c = popup.getch()
             if c == curses.KEY_DOWN:
-                if idx == -1:
-                    popup.addstr(idx + 3, 23, str(SERIAL_PORT)[5:], curses.color_pair(0) | curses.A_NORMAL)
-                    idx += 1
-                    popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
-                elif idx + 1 < len(cl):
-                    popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_NORMAL)
-                    idx += 1
-                    popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
+                if idy == -1:
+                    if idx == c_column:
+                        s_port = SERIAL_PORT
+                    else:
+                        s_port = XMODEM_PORT
+                    # print port in center
+                    idx_calc = int((11 - len(str(s_port)))/2 + idx + 2)
+                    popup.addstr(idy + 4, idx_calc, str(s_port)[5:], curses.color_pair(0) | curses.A_BOLD | curses.A_NORMAL)
+                    idy += 1
+                    s = popup.instr(idy + 5, idx, 9)
+                    popup.addstr(idy + 5, idx, s, curses.color_pair(0) | curses.A_REVERSE)
+                elif idy + 1 < len(cl):
+                    s = popup.instr(idy + 5, idx, 9)
+                    if chr(s[7]) == '*':
+                        popup.addstr(idy + 5, idx, s, curses.color_pair(0) | curses.A_BOLD | curses.A_NORMAL)
+                    else:
+                        popup.addstr(idy + 5, idx, s, curses.color_pair(0) | curses.A_NORMAL)
+                    idy += 1
+                    s = popup.instr(idy + 5, idx, 9)
+                    popup.addstr(idy + 5, idx, s, curses.color_pair(0) | curses.A_REVERSE)
             elif c == curses.KEY_UP:
-                if idx == 0:
-                    popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_NORMAL)
-                    idx -= 1
-                    popup.addstr(idx + 3, 23, str(SERIAL_PORT)[5:], curses.color_pair(0) | curses.A_REVERSE)
-                elif idx - 1 >= 0:
-                    popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_NORMAL)
-                    idx -= 1
-                    popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
+                if idy == 0:
+                    if idx == c_column:
+                        s_port = SERIAL_PORT
+                    else:
+                        s_port = XMODEM_PORT
+                    idx_calc = int((11 - len(str(s_port))) / 2 + idx + 2)
+                    s = popup.instr(idy + 5, idx, 9)
+                    popup.addstr(idy + 5, idx, s, curses.color_pair(0) | curses.A_NORMAL)
+                    idy -= 1
+                    popup.addstr(idy + 4, idx_calc, str(s_port)[5:], curses.color_pair(0) | curses.A_REVERSE)
+                elif idy - 1 >= 0:
+                    s = popup.instr(idy + 5, idx, 9)
+                    if chr(s[7]) == '*':
+                        popup.addstr(idy + 5, idx, s, curses.color_pair(0) | curses.A_BOLD | curses.A_NORMAL)
+                    else:
+                        popup.addstr(idy + 5, idx, s, curses.color_pair(0) | curses.A_NORMAL)
+                    idy -= 1
+                    s = popup.instr(idy + 5, idx, 9)
+                    popup.addstr(idy + 5, idx, s, curses.color_pair(0) | curses.A_REVERSE)
                 popup.refresh()
-
-            elif curses.keyname(c) == b'^M':
-                if idx == -1:
-                    self.popup_port_select(sio)
+            # switch to console column
+            elif c == curses.KEY_LEFT:
+                idx = c_column
+                oldidy = idy
+                idy = BAUD_RATES.index(BAUD_RATE)
+                # set console column to selected
+                popup.addstr(idy + 5, idx, cl[idy], curses.color_pair(0) | curses.A_BOLD | curses.A_REVERSE)
+                popup.addstr(idy + 5, idx +7 , "*", curses.color_pair(0) | curses.A_BOLD | curses.A_REVERSE)
+                # set xmodem column to unselected
+                s = popup.instr(oldidy + 5, x_column, 9)
+                if oldidy == selected_x:
+                    popup.addstr(oldidy + 5, x_column, s, curses.color_pair(0) | curses.A_BOLD | curses.A_NORMAL)
                 else:
-                    BAUD_RATE = BAUD_RATES[idx]
-                    sio.baudrate = BAUD_RATE
-                self.show_status_line()
-                self.write_h19config()
+                    popup.addstr(oldidy + 5, x_column, s, curses.color_pair(0) | curses.A_NORMAL)
+                s_port = SERIAL_PORT
+                BAUD_RATE = BAUD_RATES[idy]
+                sio.baudrate = BAUD_RATE
+                popup.refresh()
+            # switch to xmodem column
+            elif c == curses.KEY_RIGHT:
+                idx = x_column
+                oldidy = idy
+                idy = BAUD_RATES.index(XMODEM_RATE)
+                # set xmodem column to selected
+                popup.addstr(idy + 5, idx, cl[idy], curses.color_pair(0) | curses.A_BOLD | curses.A_REVERSE)
+                popup.addstr(idy + 5, idx + 7, "*", curses.color_pair(0) | curses.A_BOLD | curses.A_REVERSE)
+                # set console column to unselected
+                s = popup.instr(oldidy + 5, c_column, 9)
+                if oldidy == selected_c:
+                    popup.addstr(oldidy + 5, c_column, s, curses.color_pair(0) | curses.A_BOLD | curses.A_NORMAL)
+                else:
+                    popup.addstr(oldidy + 5, c_column, s, curses.color_pair(0) | curses.A_NORMAL)
+                s_port = XMODEM_PORT
+                XMODEM_RATE = BAUD_RATES[idy]
+                popup.refresh()
+            elif curses.keyname(c) == b'^M':
+                if idy == -1:
+                    self.popup_port_select(sio, idx)
+                    popup.touchwin()
+                    # Reload port
+                    popup.addstr(3, 8, "         ", curses.color_pair(0) | curses.A_NORMAL)
+                    popup.addstr(3, 28, "         ", curses.color_pair(0) | curses.A_NORMAL)
+                    popup.addstr(3, int((11 - len(str(SERIAL_PORT))) / 2 + 10), str(SERIAL_PORT)[5:], curses.A_BOLD)
+                    popup.addstr(3, int((11 - len(str(XMODEM_PORT))) / 2 + 30), str(XMODEM_PORT)[5:], curses.A_BOLD)
+                    if idx == c_column:
+                        idy = BAUD_RATES.index(BAUD_RATE)
+                        selected_c = idy
+                        popup.addstr(idy + 5, idx, cl[idy], curses.color_pair(0) | curses.A_BOLD | curses.A_REVERSE)
+                        popup.addstr(idy + 5, idx + 7, "*", curses.color_pair(0) | curses.A_BOLD | curses.A_REVERSE)
+                    else:
+                        idy = BAUD_RATES.index(XMODEM_RATE)
+                        selected_x = idy
+                        popup.addstr(idy + 5, idx, cl[idy], curses.color_pair(0) | curses.A_BOLD | curses.A_REVERSE)
+                        popup.addstr(idy + 5, idx + 7, "*", curses.color_pair(0) | curses.A_BOLD | curses.A_REVERSE)
+                    popup.refresh()
+                else:
+                    popup.addstr(idy + 5, idx, cl[idy], curses.color_pair(0) | curses.A_BOLD | curses.A_REVERSE)
+                    if idx == c_column:
+                        popup.addstr(selected_c + 5, c_column, cl[selected_c], curses.color_pair(0) | curses.A_NORMAL)
+                        popup.addstr(idy + 5, c_column + 7, "*", curses.color_pair(0) | curses.A_BOLD | curses.A_REVERSE)
+                        selected_c = idy
+                        BAUD_RATE = BAUD_RATES[idy]
+                        sio.baudrate = BAUD_RATE
+                        self.show_status_line()
+                        self.status.refresh()
+                    else:
+                        popup.addstr(selected_x + 5, x_column, cl[selected_x], curses.color_pair(0) | curses.A_NORMAL)
+                        popup.addstr(idy + 5, x_column + 7, "*", curses.color_pair(0) | curses.A_BOLD | curses.A_REVERSE)
+                        selected_x = idy
+                        XMODEM_RATE = BAUD_RATES[idy]
+                        self.screen.refresh()
+            elif chr(c) == 'q' or chr(c) == 'Q':
                 self.screen.touchwin()
                 self.screen.refresh()
                 curses.curs_set(1)
                 return
 
-            elif chr(c) == 'q':
-                self.screen.touchwin()
-                self.screen.refresh()
-                curses.curs_set(1)
-                return
-
-    def popup_port_select(self, sio):
-        global SERIAL_PORT
+    def popup_port_select(self, sio, idx):
+        global SERIAL_PORT, XMODEM_PORT
+        c_column = 8
+        x_column = 28
         cl = []
+
         try:
             from serial.tools.list_ports import comports
             for port, desc, hwid in sorted(comports()):
@@ -1723,7 +1959,8 @@ class H19Term(H19Keys, H19Screen):
         except:
             pass
 
-        popup = curses.newwin(14, 36, 8, 20)
+        self.background_clear()
+        popup = curses.newwin(14, 36, 6, 20)
         popup.attrset(curses.color_pair(0))
         for i in range(len(cl)):
             popup.addstr(i + 4, 9, cl[i], curses.color_pair(0))
@@ -1736,37 +1973,42 @@ class H19Term(H19Keys, H19Screen):
         popup.refresh()
 
         # get the index to place the cursor
-        idx = cl.index(SERIAL_PORT)
-        popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
+        if idx == c_column:
+            if SERIAL_PORT not in cl:
+                idy = 0
+            else:
+                idy = cl.index(SERIAL_PORT)
+        else:
+            if XMODEM_PORT not in cl:
+                idy = 0
+            else:
+                idy = cl.index(XMODEM_PORT)
+        popup.addstr(idy + 4, 9, cl[idy], curses.color_pair(0) | curses.A_REVERSE)
 
         while True:
             c = popup.getch()
             if c == curses.KEY_DOWN:
-                if idx + 1 < len(cl):
-                    popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_NORMAL)
-                    idx += 1
-                    popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
+                if idy + 1 < len(cl):
+                    popup.addstr(idy + 4, 9, cl[idy], curses.color_pair(0) | curses.A_NORMAL)
+                    idy += 1
+                    popup.addstr(idy + 4, 9, cl[idy], curses.color_pair(0) | curses.A_REVERSE)
             elif c == curses.KEY_UP:
-                if idx - 1 >= 0:
-                    popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_NORMAL)
-                    idx -= 1
-                    popup.addstr(idx + 4, 9, cl[idx], curses.color_pair(0) | curses.A_REVERSE)
+                if idy - 1 >= 0:
+                    popup.addstr(idy + 4, 9, cl[idy], curses.color_pair(0) | curses.A_NORMAL)
+                    idy -= 1
+                    popup.addstr(idy + 4, 9, cl[idy], curses.color_pair(0) | curses.A_REVERSE)
                 popup.refresh()
 
             elif curses.keyname(c) == b'^M':
-                SERIAL_PORT = cl[idx]
+                if idx == c_column:
+                    SERIAL_PORT = cl[idy]
+                else:
+                    XMODEM_PORT = cl[idy]
                 sio.port = SERIAL_PORT
                 self.show_status_line()
                 self.write_h19config()
-                self.screen.touchwin()
-                self.screen.refresh()
-                curses.curs_set(1)
                 return
-
             elif chr(c) == 'q':
-                self.screen.touchwin()
-                self.screen.refresh()
-                curses.curs_set(1)
                 return
 
     def show_ascii_file(self, filename):
@@ -2031,41 +2273,85 @@ class H19Term(H19Keys, H19Screen):
                 self.bell()
 #                self.popup_error("For SHIFT ARROW keys, press F9, see help.")
 
-    def xmodem_send(self):
+    def xmodem_send(self,sio):
         SOH = b'\x01'
         EOT = b'\x04'
         ACK = b'\x06'
         NAK = b'\x15'
 
-        ser = serial.Serial('/dev/ttyS2', timeout=0)  # or whatever port you need
-        ser.baudrate = 19200
+        ser = serial.Serial(XMODEM_PORT, timeout=0)  # or whatever port you need
+        ser.baudrate = XMODEM_RATE
         ser.xonoff = False
         ser.rtscts = False
         ser.dsrdtr = False
 
-        filename = self.popup_filename()
-        file = open(filename, 'rb')
+        filename, popup = self.popup_filename()
+        if filename == None:
+            self.screen.touchwin()
+            self.screen.refresh()
+            return
+
+        try:
+            file = open(filename, 'rb')
+        except Exception:
+            popup.addstr(3, 2, "File not found...")
+            popup.refresh()
+            time.sleep(2)
+            self.screen.touchwin()
+            self.screen.refresh()
+            popup = None
+            return False
+
+        if AUTORUN_MODE == 'USER':
+            resp = chr(self.popup_autorun('USER'))
+            if resp == 'A' or resp == 'a':
+                for c in "RX -n ":
+                    self.sio_write(sio, c)
+                for c in os.path.basename(filename):
+                    self.sio_write(sio, c)
+                self.sio_write(sio, '\r')
+            elif resp != '\r':
+                return False  # implies Q
+        elif AUTORUN_MODE == 'AUTO':
+            for c in "RX -n ":
+                self.sio_write(sio, c)
+            for c in os.path.basename(filename):
+                self.sio_write(sio, c)
+            self.sio_write(sio, '\r')
+        else:  # end up here with option ANY
+            resp = chr(self.popup_autorun('ANY'))
+
+        filesize = os.path.getsize(filename)
+        progress_chunk_size = 100 / (filesize/128)
 
         t, anim = 0, '|/-\\'
+        curses.curs_set(CURSOR_INVISIBLE)
+
+        self.background_clear()
+        popup = curses.newwin(5, 58, 10, 10)
+        popup.attrset(curses.color_pair(0))
+        popup.border('|', '|', '-', '-', '+', '+', '+', '+')
+        popup.addstr(0, 20, "Transfer Progress")
+        popup.addstr(2, 2, "Waiting for ACK...")
+        popup.refresh()
 
         ser.timeout = 1
-        while 1:
+        while True:
             c = ser.read(1)
             if c != NAK:
-                t = t + 1
-                sys.stdout.write(anim[t % len(anim)])
-                sys.stdout.write('\r')
+                t += 1
                 if t == 60:
                     return
             else:
                 break
 
-        #print("Got NAK...")
-
+        popup.addstr(2,2, "Complete: %0            ")
         p = 1
         s = file.read(128)
 
+        progress = 0
         while s:
+            progress += progress_chunk_size
             if len(s) < 128:
                 s = s.ljust(128, b'\x1a')
             chk = 0
@@ -2084,12 +2370,21 @@ class H19Term(H19Keys, H19Screen):
                 if answer == ACK:
                     break
                 return
+            popup.addstr(2, 13, str(int(progress)))
+            popup.refresh()
+
             s = file.read(128)
             p = (p + 1) % 256
 
-            print('.', end='')
-
         ser.write(EOT)
+        popup.addstr(2, 13, "100")
+        popup.addstr(2, 20, "Transfer complete, press CR")
+        popup.refresh()
+        popup.getch()
+        curses.curs_set(CURSOR_NORMAL)
+        self.screen.touchwin()
+        self.screen.refresh()
+        popup = None
         return True
 
     def main(self, scr, term, sio):

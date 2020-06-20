@@ -3,6 +3,49 @@
 # This script installs the H19term software on a Linux X11 desktop such
 # as GNOME or KDE.
 
+AUTOLOGIN()
+{
+    echo
+    echo "Would you like to enable autologin of the \"pi\" user? "
+    echo "Press ENTER to enable autologin or \"n\" to skip :" ; read CHOOSE
+
+    if [ "${CHOOSE}" = "n" ] || [ "${CHOOSE}" = "N" ] ; then
+        echo "Skipping autologin setup"
+    else
+        echo -n "Enabling autologin... "
+        systemctl set-default multi-user.target
+        ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
+        cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << EOF
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --autologin $SUDO_USER --noclear %I \$TERM
+EOF
+        echo "[ DONE ]"
+    fi
+}
+
+
+AUTORUN()
+{
+    echo 
+    echo "Would you like to enable autorun of H19term when you login? "    
+    echo "Press ENTER to enable autorun or \"n\" to skip :" ; read CHOOSE
+
+    if [ "${CHOOSE}" = "n" ] || [ "${CHOOSE}" = "N" ] ; then
+        echo "Skipping autorun setup"
+    else
+        echo "Setting auto run of h19term.py for user pi..."
+    cat > /home/pi/.profile << EOF
+/usr/local/bin/h19term.py
+echo
+echo -n "Would you like to shutdown the system \"y\" or \"Y\" for yes or \"ENTER\" for no? "
+read CHOICE
+if [ "${CHOICE}" = "y" ] || [ "${CHOICE}" = "Y" ] ; then
+    sudo shutdown -h now
+fi
+EOF
+    fi
+}
 
 
 REMOVE()
@@ -43,7 +86,12 @@ if [ "`whoami`" != "root" ] ; then
 fi
 
 clear
-echo "H19TERM"
+echo    "  _   _  _   ___   _          "
+echo -E " | | | |/ | / _ \ | |_  ___  _ __  _ __ ___  "
+echo -E " | |_| || || (_) || __|/ _ \| '__|| '_ \` _ \ "
+echo -E " |  _  || | \__, || |_|  __/| |   | | | | | |"
+echo -E " |_| |_||_|   /_/  \__|\___||_|   |_| |_| |_|"
+echo
 echo
 echo "Installation script for installing H19term. "
 echo
@@ -55,11 +103,14 @@ if [ -d "/usr/local/share/h19term" ]; then
     echo "H19term is already installed, we will remove the old"
     echo "installation before installing this version"
     echo -n "Press ENTER to continue, or CTRL-C to exit : " ; read ENTER
+
     REMOVE
+
     echo
     echo "Proceeding with installation..."
     sleep 2
 fi
+
 
 RPI=NO
 
@@ -70,6 +121,7 @@ if (cat /proc/cpuinfo | grep ARM >/dev/null) ; then
 fi
 
 if [ $RPI == "YES" ]; then
+    echo
     echo "Looks like you are installing on a Raspberry Pi..."
     
     V=`cat /etc/debian_version`
@@ -85,45 +137,28 @@ if [ $RPI == "YES" ]; then
     echo "For H19term to function correctly your locale must be set"
     echo "to en_US.UTF-8..."
     echo
-    echo -n "If your are not ok with this please hit CTRL-C to exit" 
-    echo " or <Enter> to continue"; read ENTER
-    echo "Changing locale to en_US.UTF.8..."
-    # set locale to en_US.UTF.8        
-    perl -pi -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/g' /etc/locale.gen
-    locale-gen en_US.UTF-8
-    update-locale en_US.UTF-8
-
-    echo "Setting Linux Console font to H19term16x32..."        
-    echo "FONT=/usr/share/h19term/H19term16x32.psfu.gz" >>/etc/default/console-setup
-    echo
-    echo "Would you like to enable autologin of the \"pi\" user? "
-    echo "Press ENTER to enable autologin or \"n\" to skip :" ; read CHOOSE
+    echo -n "If your are not ok with this please hit \"N\" to skip" 
+    echo " or <Enter> to continue"; read CHOOSE
 
     if [ "${CHOOSE}" = "n" ] || [ "${CHOOSE}" = "N" ] ; then
-        echo "Skipping autologin setup"
+        echo "Skipping language setup"
     else
-        echo -n "Enabling autologin... "
-        systemctl set-default multi-user.target
-        ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
-        cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << EOF
-[Service]
-ExecStart=
-ExecStart=-/sbin/agetty --autologin $SUDO_USER --noclear %I \$TERM
-EOF
-        echo "[ DONE ]"
+        echo "Changing locale to en_US.UTF.8..."
+        # set locale to en_US.UTF.8        
+        perl -pi -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/g' /etc/locale.gen
+        locale-gen en_US.UTF-8
+        update-locale en_US.UTF-8
     fi
 
-    echo 
-    echo "Setting auto run of h19term.py for user pi..."
-    cat > /home/pi/.profile << EOF
-/usr/local/bin/h19term.py
-echo
-echo -n "Would you like to shutdown the system \"y\" or \"Y\" for yes or \"ENTER\" for no? "
-read CHOICE
-if [ "${CHOICE}" = "y" ] || [ "${CHOICE}" = "Y" ] ; then
-    sudo shutdown -h now
-fi
-EOF
+    echo "Setting Linux Console font to H19term16x32..."        
+    if ( cat /etc/default/console-setup | grep -i H19term >/dev/null ) ; then
+        echo "H19term console font already installed, skipping..."
+    else
+        echo "FONT=/usr/share/h19term/H19term16x32.psfu.gz" >>/etc/default/console-setup
+    fi
+
+    AUTOLOGIN
+    AUTORUN
 fi
 
 # Check distro
@@ -153,7 +188,7 @@ if [ $OS = "Debian" ]; then
     echo
     usermod -a -G dialout $SUDO_USER
     sleep .5
-elif [ $OS = "arch" ]; then
+elif [ $OS = "Arch" ]; then
     echo
     echo
     echo "It looks like you are running an Arch based distribution."

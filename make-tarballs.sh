@@ -22,6 +22,7 @@ cp -v H19term16x32.psfu.gz h19term-src
 cp -v Heathkit-H19-bitmap.otb h19term-src
 cp -v Heathkit-H19.otf h19term-src
 cp -v INSTALLATION.txt h19term-src
+cp -v RX.COM h19term-src
 
 cd h19term-src
 
