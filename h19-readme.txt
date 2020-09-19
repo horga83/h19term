@@ -83,6 +83,12 @@
   
  Function Keys
  ------------- 
+ IL        Keypad 1
+ DL        Keypad 3
+ HOME      Keypad 5
+ IC        Keypad 7
+ DC        Keypad 9
+
  F1-F5     Same as PC keyboard
  BLUE      F6 key on PC
  RED       F7
@@ -122,6 +128,7 @@
  Ctrl-A K   Toggle the Keypad between normal and alternate mode
  Ctrl-A L   Toggle logging of serial data to h19term.log
  Ctrl-A M   Show this user manual
+ Ctrl-A N   Toggle window box characters, for copy and paste of terminal
  Ctrl-A Q   CP/M Quick Help
  Ctrl-A P   Select serial port and baud rate
  Ctrl-A R   Reset the terminal to power up mode

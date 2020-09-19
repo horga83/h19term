@@ -75,6 +75,8 @@
 # May 30, 2020   V2.3  Fix window sizes on Raspberry pi/ Linux console
 #                      and only use 16x32 font.
 # Jun 01, 2020   V2.4  Added Xmodem transfer.
+# Aug 22, 2020   V2.5  Add toggling window box drawing characters for Linux copy and paste.
+#                      Add keypad associations to help screen.
 
 import os
 import re
@@ -151,8 +153,8 @@ DEFAULT_COLOUR = 0
 
 # ************  END OF USER MODIFIABLE SETTINGS *****************************
 
-VERSION = 'V2.4 - Python 3'
-VERSION_DATE = 'Jun 01, 2020'
+VERSION = 'V2.5 - Python 3'
+VERSION_DATE = 'Aug 22, 2020'
 
 CONFIG_FILE = os.path.join(os.environ['HOME'], '.h19termrc')
 LOG_FILE = os.path.join(os.environ['HOME'], 'h19term.log')
@@ -540,6 +542,7 @@ class H19Term(H19Keys, H19Screen):
         self.screen = None
         self.status = None
         self.logio = False
+        self.showbox = True
         self.baudrate = [110, 150, 300, 600, 1200, 1800, 2000, 2400, 3600, 4800, 7200, 9600, 19200, 38400]
 
         H19Screen.__init__(self, self.screen, self.status)
@@ -1485,11 +1488,12 @@ class H19Term(H19Keys, H19Screen):
     H19 BREAK Key..................B  |  KP_ENTER..F10
     H19 DEL Key....................D  |  ERASE.....F11
     CP/M Quick Help................Q  |  OFFLINE...F12
-    Set H19term colours............C  |
-    Set Baud Rate and Port.........P  |
-    Send file by XMODEM............S  |
-                                      
-    Press command key or <Enter> to close help.
+    Set H19term colours............C  |  IL.......KP_1
+    Set Baud Rate and Port.........P  |  DL.......KP_3
+    Send file by XMODEM............S  |  HOME.... KP_5
+    Toggle window box char.........N  |  IC.......KP_7
+                                      |  DC.......KP_9
+        Press command key or <Enter> to close help.
         """
         try:
             self.background_clear()
@@ -1574,6 +1578,19 @@ class H19Term(H19Keys, H19Screen):
 
             elif s == 'm' or s == 'M':  # Show user manual
                 self.show_ascii_file('h19-readme.txt')
+                break
+
+            elif s == 'n' or s == 'N':  # Toggle box around window for copy paste reasons
+                if self.showbox:
+                    self.cur.border(' ',' ',' ',' ',' ',' ',' ',' ')
+                    self.showbox = False
+                else:
+                    self.cur.border()
+                    self.showbox = True
+                self.cur.refresh()
+                self.show_status_line()
+                self.screen.touchwin()
+                self.screen.refresh()
                 break
 
             elif s == 'p' or s == 'P':  # Set baud rate
